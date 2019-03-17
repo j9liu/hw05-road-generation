@@ -1,56 +1,96 @@
-# Homework 5: Road Generation
+# Road Generation
+**By Janine Liu / jliu99**
 
-For this assignment, you will generate a network of roads to form the basis of a city using a modified version of L-systems. As in homework 4, you will be using instanced rendering to draw your road networks.
+# External Resources
 
-## Base Code
-We have provided the same code that came with homework 4, but you will likely want to use most of your code from that assignment. Feel free to copy over as much of your homework 4 implementation as you want. We have also provided [Procedural Modeling of Cities](proceduralCityGeneration.pdf), a brief technical paper describing techniques for generating road networks. Refer to this as you implement the sections below.
+In addition to the class lectures and powerpoints, I consulted a few external resources for this project:
+- http://pcgbook.com/wp-content/uploads/chapter05.pdf, for inspiration with the L-system grammar rules.
+- https://www.turbosquid.com/3d-models/iconic-heart-3ds-free/389728, for the heart model
+- https://www.turbosquid.com/3d-models/pot-garden-ma-free/957561, for the pot model
 
-## Assignment Requirements
-- __(10 points)__ Use whatever noise functions suit you to generate 2D map data of the following information, and set up GUI toggles to render each map on a 2D screen quadrangle. The user should have the option to view both overlaid on each other.
-  - Terrain elevation, setting anything below a certain height to water. Higher elevation should be lighter in color. Include an option to display a simple land versus water view.
-  - Population density. Denser population should be lighter in color.
-- __(20 points)__ Create a set of classes to represent a pseudo L-system; you will still have a Turtle to track your drawing state, but you will expand your road network based on the Turtle's current environment as it moves and draws. You won't be tracking a grammar as a set of characters, but you will keep a set of rules to determine how to advance your Turtle.
-  - Your Turtle will begin from a random point in the bounds of your screen.
-  - Depending on the type of road network being generated (see next section) your Turtle will move forward and draw some sort of road in its wake.
-  - Each time the Turtle completes a road segment, it will evaluate whether it should branch to create more roads in different directions (same idea as the push and pop of Turtle state). This is where your expansion rules come in; the Turtle must decide how it will branch (if at all).
-  - Store your roads as sets of edges and intersections so that you can more easily make roads connect to one another as described in section 3.3.1 of Procedural Modeling of Cities
-- __(20 points)__ Create distinct rule sets for drawing roads that obey the following layouts (refer to figure 5 in [Procedural Modeling of Cities](proceduralCityGeneration.pdf) for illustrations):
-  - Basic road branching: The main roads follow population density as a metric for directional bias
-  - Checkered road networking: The roads are aligned with some global directional vector and have a maximum block width and length. Intersections are all roughly 90 degrees.
-- __(30 points)__ Using the components you created in the previous sections, generate the 2D street layout of a city with the following features:
-  - An overarching sparse layout of highway roads that are thicker than other roads
-  - Within the highway outline, denser clusters of smaller roads with less visual line thickness than the highways
-  - Inclusion of both road branching methods
-  - Only highways are allowed to cross water
-  - Roads are self-sensitive, as described in section 3.3.1 of Procedural Modeling of Cities
+# Live GitHub demo
+https://j9liu.github.io/hw4/
 
-- __(10 points)__ Using dat.GUI, make at least three aspects of your program interactive, such as:
-  - Terrain shape
-  - Population density
-  - Highway density
-  - Random seed used for the RNG basis of road branching
+# L-System Ruleset
 
-- __(10 points)__ Following the specifications listed
-[here](https://github.com/pjcozzi/Articles/blob/master/CIS565/GitHubRepo/README.md),
-create your own README.md, renaming the file you are presently reading to
-INSTRUCTIONS.md. Don't worry about discussing runtime optimization for this
-project. Make sure your README contains the following information:
-    - Your name and PennKey
-    - Citation of any external resources you found helpful when implementing this
-    assignment.
-    - A link to your live github.io demo (refer to the pinned Piazza post on
-      how to make a live demo through github.io)
-    - An explanation of the techniques you used to generate your L-System features.
-    Please be as detailed as you can; not only will this help you explain your work
-    to recruiters, but it helps us understand your project when we grade it!
+I incorporated probability into both my expansion and drawing rules. To pick an outcome, I would generate a random number, then sum the probability of the rules until it was equal to or greater than the random number. Due to the use of the Math.random() function, the seed is not consistent and changes upon refreshing or changing any features with the GUI.
 
-## Expected visual output
-The results of your road generation need only be simple 2D images, like the ones in Procedural Modeling of Cities. You may make 3D terrain with overlaid roads if you want, but for this assignment it's not necessary.
+The initial axiom provided was "SSSF."
 
-![](nyc.png)
+**Expansion Rules**
 
-## Extra Credit (Up to 20 points)
-- Implement additional road layouts as described in Procedural Modeling of Cities
-  - Radial road networking: The main roads follow radial tracks around some predefined centerpoint
-  - Elevation road networking: Roads follow paths of least elevation change
-- Add any polish features you'd like to make your visual output more interesting
+'F' -> 'S-[SSSSLF]+S' with 25% probability, '[+SSSCLF]-CSSSLF' with 75% probability.
+
+'S' -> 'SS+SL' with 10% probability, 'S+SLF' with 10% probability, 'S' with 80% probability.
+
+**Drawing Rules**
+
+'[' -> Push the turtle's current position and orientation onto the stack.
+
+']' -> Pop the previous turtle's position and orientation off the stack.
+
+'+' -> Rotate the user-specified angle counter-clockwise in the y- and z-directions.
+
+'-' -> Rotate the user-specified angle clockwise in the y- and z-directions.
+
+'S' -> Draw a straight branch, composed of one cylinder instance.
+
+'C' -> Draw a curved branch, composed of a couple cylinder instances.
+
+'F' -> Draw a fruit at the current position.
+
+'L' -> Draw a leaf at the current position with a 60% probability (to reduce leaf clutter).
+
+# Aesthetic Features
+
+The background is a simple gradient between a bright blue and pastel yellow, based on the y-coordinate of the screen.
+
+![](background.png)
+
+The pot is a free asset (linked above), colored and filled with a cylinder of dark brown for soil.
+
+![](pot.png)
+
+This is a work-in-progress shot of the L-systems, where the branches are a composition of multiple cylinder instances. The cylinder was pulled form the default polygon meshes in Maya. The user may adjust the recursion level, although it is limited due to the clutter that occurs above a depth of 6.
+
+![](branches.png)
+
+Additionally, the user may modify the angle at which the turtle rotates to make new branches. This formation occurs when the angle is set to 0...
+
+![](angle0.png)
+
+... while something like this will be built when the angle is set to 20.
+
+![](angle20.png)
+
+In addition to being colored green, the branches appear more organic with the help of scaling. Each recursion depth scales the branches to be slightly smaller, so the deeper into the recursion, the thinner the branch. Additionally, the curved branches taper towards the end, which is especially apparent at the deepest recursion levels.
+
+![](scaling.png)
+
+Using Maya, I created a leaf asset which was then interleaved (pun intended) with the branches. These leaves are inversely scaled, such that the deeper they occur in recursion, the larger they scale.
+
+![](leaves.png)
+
+I also added "fruits" to the plant using the free heart asset. These only occur above a certain recursion level, so that the small plants won't be burdened with fruit. These also scale inversely with recursion, and are rotated a random amount around the y-axis for variety.
+
+![](hearts.png)
+
+The user may also adjust the color of the fruits to their liking.
+
+![](hearts2.png)
+
+Finally, I added a block of wood that is passed into its own shader for procedural texturing. This method generates FBM noise with a warped domain, takes the fractal component, and passes it into a wood-colored cosine palette, which is then integrated with the original base color. The domain is based on a multiple of the x-position, with a cosine factor based on the sum of the y- and z-positions to add the waves.
+
+![](wood.png)
+
+Due to the probability and the lack of consistent seeding, every plant that is generated is different. Here are some examples of what plant structures can arise from playing around with the features and refreshing.
+
+![](final.png)
+
+![](final2.png)
+
+![](final3.png)
+
+![](final4.png)
+
+![](final5.png)

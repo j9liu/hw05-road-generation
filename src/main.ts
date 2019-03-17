@@ -11,11 +11,16 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
+  displayLandWater: true;
+  displayElevation: true;
+  displayPopDensity: true;
 };
 
 let square: Square;
 let screenQuad: ScreenQuad;
 let time: number = 0.0;
+
+
 
 function loadScene() {
   square = new Square();
@@ -60,6 +65,9 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'displayLandWater');
+  gui.add(controls, 'displayElevation');
+  gui.add(controls, 'displayPopDensity');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
