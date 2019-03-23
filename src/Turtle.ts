@@ -1,28 +1,26 @@
-import {vec3, vec4, mat4} from 'gl-matrix';
+import {vec2, vec3, mat3} from 'gl-matrix';
 
 class Turtle {
-	position: vec3 = vec3.create();
-  orientation: vec3 = vec3.create();
+	position: vec2 = vec2.create();
+  orientation: vec2 = vec2.create();
   depth: number = 0;
 
-  constructor(pos: vec3, orient: vec3, dep: number) {
-    vec3.copy(this.position, pos);
-    vec3.copy(this.orientation, orient);
+  constructor(pos: vec2, orient: vec2, dep: number) {
+    vec2.copy(this.position, pos);
+    vec2.copy(this.orientation, orient);
     this.depth = dep;
   }
 
   moveForward(amt: number) {
-    let temp : vec3 = vec3.create();
-    vec3.scale(temp, this.orientation, amt);
-    vec3.add(this.position, this.position, temp);
+    let temp : vec2 = vec2.create();
+    vec2.scale(temp, this.orientation, amt);
+    vec2.add(this.position, this.position, temp);
   }
 
-  rotate(x: number, y: number, z: number) {
-    let transform : mat4 = mat4.create();
-    mat4.rotateX(transform, transform, x * 0.01745329251);
-    mat4.rotateY(transform, transform, y * 0.01745329251);
-    mat4.rotateZ(transform, transform, z * 0.01745329251);
-    vec3.transformMat4(this.orientation, this.orientation, transform);
+  rotate(deg: number) {
+    let transform : mat3 = mat3.create();
+    mat3.rotate(transform, transform, deg * 0.01745329251);
+    vec2.transformMat3(this.orientation, this.orientation, transform);
   }
  
 }

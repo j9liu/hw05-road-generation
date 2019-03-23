@@ -24,18 +24,23 @@ class ShaderProgram {
   attrPos: number;
   attrNor: number;
   attrCol: number; // This time, it's an instanced rendering attribute, so each particle can have a unique color. Not per-vertex, but per-instance.
-  attrTranslate: number; // Used in the vertex shader during instanced rendering to offset the vertex positions to the particle's drawn position.
+  attrTransform1: number; // Represents the columns of the transform matrix
+  attrTransform2: number;
+  attrTransform3: number;
   attrUV: number;
 
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
+  unif2DProj: WebGLUniformLocation;
   unifCameraAxes: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifRef: WebGLUniformLocation;
   unifEye: WebGLUniformLocation;
   unifUp: WebGLUniformLocation;
   unifDimensions: WebGLUniformLocation;
+  unifShowElevation: WebGLUniformLocation;
+  unifShowPopulation: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -49,18 +54,24 @@ class ShaderProgram {
     }
 
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
-    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
-    this.attrTranslate = gl.getAttribLocation(this.prog, "vs_Translate");
+    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
+    this.attrTransform1 = gl.getAttribLocation(this.prog, "vs_Transform1");
+    this.attrTransform2 = gl.getAttribLocation(this.prog, "vs_Transform2");
+    this.attrTransform3 = gl.getAttribLocation(this.prog, "vs_Transform3");
     this.attrUV = gl.getAttribLocation(this.prog, "vs_UV");
-    this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
-    this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
-    this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
-    this.unifCameraAxes      = gl.getUniformLocation(this.prog, "u_CameraAxes");
-    this.unifTime      = gl.getUniformLocation(this.prog, "u_Time");
-    this.unifEye   = gl.getUniformLocation(this.prog, "u_Eye");
-    this.unifRef   = gl.getUniformLocation(this.prog, "u_Ref");
-    this.unifUp   = gl.getUniformLocation(this.prog, "u_Up");
+
+    this.unifModel            = gl.getUniformLocation(this.prog, "u_Model");
+    this.unifModelInvTr       = gl.getUniformLocation(this.prog, "u_ModelInvTr");
+    this.unifViewProj         = gl.getUniformLocation(this.prog, "u_ViewProj");
+    this.unif2DProj           = gl.getUniformLocation(this.prog, "u_2DProj");
+    this.unifCameraAxes       = gl.getUniformLocation(this.prog, "u_CameraAxes");
+    this.unifTime             = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifEye              = gl.getUniformLocation(this.prog, "u_Eye");
+    this.unifRef              = gl.getUniformLocation(this.prog, "u_Ref");
+    this.unifUp               = gl.getUniformLocation(this.prog, "u_Up");
+    this.unifShowElevation    = gl.getUniformLocation(this.prog, "u_ShowElevation");
+    this.unifShowPopulation   = gl.getUniformLocation(this.prog, "u_ShowPopulation");
   }
 
   use() {
@@ -111,6 +122,13 @@ class ShaderProgram {
     }
   }
 
+  set2DProjMatrix(p: mat3) {
+    this.use();
+    if (this.unif2DProj !== -1) {
+      gl.uniformMatrix3fv(this.unif2DProj, false, p);
+    }
+  }
+
   setCameraAxes(axes: mat3) {
     this.use();
     if (this.unifCameraAxes !== -1) {
@@ -122,6 +140,20 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, t);
+    }
+  }
+
+  setShowElevation(val: number) {
+    this.use();
+    if (this.unifShowElevation !== -1 ) {
+      gl.uniform1f(this.unifShowElevation, val);
+    }
+  }
+
+  setShowPopulation(val: number) {
+    this.use();
+    if (this.unifShowPopulation !== -1 ) {
+      gl.uniform1f(this.unifShowPopulation, val);
     }
   }
 
@@ -146,10 +178,22 @@ class ShaderProgram {
       gl.vertexAttribDivisor(this.attrCol, 1); // Advance 1 index in col VBO for each drawn instance
     }
 
-    if (this.attrTranslate != -1 && d.bindTranslate()) {
-      gl.enableVertexAttribArray(this.attrTranslate);
-      gl.vertexAttribPointer(this.attrTranslate, 3, gl.FLOAT, false, 0, 0);
-      gl.vertexAttribDivisor(this.attrTranslate, 1); // Advance 1 index in translate VBO for each drawn instance
+    if (this.attrTransform1 != -1 && d.bindTransform1()) {
+      gl.enableVertexAttribArray(this.attrTransform1);
+      gl.vertexAttribPointer(this.attrTransform1, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrTransform1, 1); // Advance 1 index in translate VBO for each drawn instance
+    }
+
+    if (this.attrTransform2 != -1 && d.bindTransform2()) {
+      gl.enableVertexAttribArray(this.attrTransform2);
+      gl.vertexAttribPointer(this.attrTransform2, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrTransform2, 1); // Advance 1 index in translate VBO for each drawn instance
+    }
+
+    if (this.attrTransform3 != -1 && d.bindTransform3()) {
+      gl.enableVertexAttribArray(this.attrTransform3);
+      gl.vertexAttribPointer(this.attrTransform3, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribDivisor(this.attrTransform3, 1); // Advance 1 index in translate VBO for each drawn instance
     }
 
     if (this.attrUV != -1 && d.bindUV()) {
@@ -177,7 +221,9 @@ class ShaderProgram {
     if (this.attrPos != -1) gl.disableVertexAttribArray(this.attrPos);
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
-    if (this.attrTranslate != -1) gl.disableVertexAttribArray(this.attrTranslate);
+    if (this.attrTransform1 != -1) gl.disableVertexAttribArray(this.attrTransform1);
+    if (this.attrTransform2 != -1) gl.disableVertexAttribArray(this.attrTransform2);
+    if (this.attrTransform3 != -1) gl.disableVertexAttribArray(this.attrTransform3);
     if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
   }
 };
