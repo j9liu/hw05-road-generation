@@ -41,6 +41,7 @@ class ShaderProgram {
   unifDimensions: WebGLUniformLocation;
   unifShowElevation: WebGLUniformLocation;
   unifShowPopulation: WebGLUniformLocation;
+  unifWaterLevel: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -53,13 +54,13 @@ class ShaderProgram {
       throw gl.getProgramInfoLog(this.prog);
     }
 
-    this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
-    this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
-    this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
+    this.attrPos        = gl.getAttribLocation(this.prog, "vs_Pos");
+    this.attrCol        = gl.getAttribLocation(this.prog, "vs_Col");
+    this.attrNor        = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrTransform1 = gl.getAttribLocation(this.prog, "vs_Transform1");
     this.attrTransform2 = gl.getAttribLocation(this.prog, "vs_Transform2");
     this.attrTransform3 = gl.getAttribLocation(this.prog, "vs_Transform3");
-    this.attrUV = gl.getAttribLocation(this.prog, "vs_UV");
+    this.attrUV         = gl.getAttribLocation(this.prog, "vs_UV");
 
     this.unifModel            = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr       = gl.getUniformLocation(this.prog, "u_ModelInvTr");
@@ -72,6 +73,7 @@ class ShaderProgram {
     this.unifUp               = gl.getUniformLocation(this.prog, "u_Up");
     this.unifShowElevation    = gl.getUniformLocation(this.prog, "u_ShowElevation");
     this.unifShowPopulation   = gl.getUniformLocation(this.prog, "u_ShowPopulation");
+    this.unifWaterLevel       = gl.getUniformLocation(this.prog, "u_WaterLevel");
   }
 
   use() {
@@ -154,6 +156,13 @@ class ShaderProgram {
     this.use();
     if (this.unifShowPopulation !== -1 ) {
       gl.uniform1f(this.unifShowPopulation, val);
+    }
+  }
+
+  setWaterLevel(level: number) {
+    this.use();
+    if (this.unifWaterLevel !== -1 ) {
+      gl.uniform1f(this.unifWaterLevel, level);
     }
   }
 

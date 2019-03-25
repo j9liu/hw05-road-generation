@@ -33,12 +33,21 @@ export default class Edge {
   	return this.endpoint2;
   }
 
+  // Get the direction vector going from point 1 to point 2
+  getDirectionVector() : vec2 {
+    let dir : vec2 = vec2.create();
+    vec2.subtract(dir, this.endpoint2.position, this.endpoint1.position);
+    vec2.normalize(dir, dir);
+    return dir;
+  }
+
   intersectionEdge(e: Edge) : vec2 {
     // Suppose this edge is defined as x0(t) = u0 + tv0,
     // and the given edge is defined   x1(t) = u1 + tv1,
     // where t exists in the interval [0, 1].
     // u0 = this.endpoint1, v0 = this.endpoint2 - this.endpoint1
     // u1 = e.endpoint1,    v1 = e.endpoint2 - e.endpoint2
+
     let v0 = vec2.fromValues(this.endpoint2.x - this.endpoint1.x,
                              this.endpoint2.y - this.endpoint1.y);
     let v1 = vec2.fromValues(e.endpoint2.x - e.endpoint1.x,

@@ -6,7 +6,6 @@
 In addition to the class lectures and powerpoints, I consulted a few external resources for this project:
 - https://stackoverflow.com/questions/41855261/calculate-the-angle-between-a-line-and-x-axis, for the formula for calculating the angle between a given line and the x-axis.
 - https://stackoverflow.com/questions/4977491/determining-if-two-line-segments-intersect/4977569, for a method of checking whether two line segments intersect or not.
-- 
 
 # Live GitHub demo
 https://j9liu.github.io/roadgen/
@@ -19,21 +18,26 @@ Due to the tweakable, self-sensitive nature of the network, the roads needed to 
 
 We define the space in which the roads are initially created as "cityspace." The bounds of cityspace are defined from (0, 0) in the bottom left corner to a specified (width, height) in the upper right corner.
 
+![](grid.png)
+
+Our road generator operates within the coordinates of this cityspace to produce roads, then uses its own projection matrix to transform the network cityspace coordinates (from (0, 0) and (width, height)) to screen coordinates (from (-1, -1) and (1, 1)), such that they can be displayed in the 2D view as shown.
+
 # L-System Ruleset
 
-I took my L-System framework from my [previous project](https://j9liu.github.io/hw4/) as a basis for the behavior of the road generator. While there were no strings and expansion rules involved, I used my implementation of the DrawingRule class to clarify probabilistic behaviors for the Turtle that draws the roads. To pick an outcome, I would generate a random number, then sum the probability of the rules until it was equal to or greater than the random number. Due to the use of the Math.random() function, the seed is not consistent and changes upon refreshing or changing any features with the GUI.
+I took my L-System framework from my [previous project](https://j9liu.github.io/hw4/) as a basis for the behavior of the road generator. While there were no strings and expansion rules involved, I used my implementation of the DrawingRule class to clarify probabilistic behaviors for the Turtle that draws the roads. To pick an outcome, I would generate a random number, then sum the probability of the rules until it was equal to or greater than the random number. Due to the use of the Math.random() function, the seed is not consistent and changes when generating a new road network.
 
-**Drawing Rules**
+**Basic Road Branching Rules**
+- (17.5% probability) Draw a highway within a user-specified angle. 
 
-- Push the turtle's current position and orientation onto the stack.
+- (20% probability) Draw multiple highways using the same rules as 
 
-- Rotate the user-specified angle counter-clockwise.
+- (12.5% probability) Draw smaller roads.
 
-- Rotate the user-specified angle clockwise.
+- Rotate 45 degrees counter-clockwise.
 
-- Draw a highway.
+- Rotate 45 degrees clockwise.
 
-- Draw a grid network.
+**Grid Road Drawing Rules**
 
 # Drawing With Self Sensitivity
 

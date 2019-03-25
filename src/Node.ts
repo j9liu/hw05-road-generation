@@ -28,4 +28,11 @@ export default class Node {
   	}
   }
 
+  // First parameter is bottom left corner,
+  // second parameter is top right corner.
+  withinQuad(corner1: vec2, corner2: vec2) : boolean {
+      return (corner1[0] <= this.x && this.x <= corner2[0]) &&
+             (corner1[1] <= this.y && this.y <= corner2[1]);
+  }
+
 }

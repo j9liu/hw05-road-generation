@@ -7,6 +7,7 @@ uniform float u_Time;
 
 uniform float u_ShowElevation;  // True if > 0
 uniform float u_ShowPopulation; // True if > 0
+uniform float u_WaterLevel;
 
 in vec2 fs_Pos;
 out vec4 out_Col;
@@ -115,7 +116,7 @@ void main() {
 	
 	// Land vs. Water Graph
 	float height = pow(fbm2(2.f * fs_Pos + vec2(1., -0.4)), 5.);
-	if(height < 0.5) {
+	if(height < u_WaterLevel) {
  		out_Col = vec4(vec3(66., 134., 244.) / 255., 1.);
   	} else {
   		out_Col = vec4(1.);
@@ -123,7 +124,7 @@ void main() {
 	
 	// Show elevation
 	if(u_ShowElevation > 0.) {
-		if(height < 0.5) {
+		if(height < u_WaterLevel) {
 	 		out_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,
 	 					   height + worleyNoise(fs_Pos)), 1.);
 		} else if (height < 0.8) {
@@ -138,14 +139,16 @@ void main() {
 	}
 
 	// Show population density
-	if(u_ShowPopulation > 0. && height >= 0.5) {
+	if(u_ShowPopulation > 0. && height >= u_WaterLevel) {
 		float population = pow(1. - worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 2.);
 		if(population < 0.2) {
 			out_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.1), 1.);
-		} else if(population < 0.67) {
+		} else if(population < 0.5) {
 			out_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.4), 1.);
-		} else if(population < 1.) {
+		} else if(population < 0.8) {
 			out_Col = vec4(mix(out_Col.xyz, vec3(130., 232., 67.) / 255., 0.5), 1.);
+		} else {
+			out_Col = vec4(mix(out_Col.xyz, vec3(22., 158., 62.) / 255., 0.5), 1.);
 		}
 	}
 	
