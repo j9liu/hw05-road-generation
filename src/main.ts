@@ -141,8 +141,7 @@ basic.addOutcome(rotateTurtleCW, 0.15);
 basic.addOutcome(rotateTurtleCCW, 0.15)
 
 let grid : DrawingRule = new DrawingRule();
-grid.addOutcome(drawGrid, 0.25);
-grid.addOutcome(drawInfiniteGrid, 0.25);
+grid.addOutcome(drawGrid, 0.50);
 
 //// NODE, EDGE DATA ////
 let mainRoads : Array<Edge>;
@@ -441,8 +440,8 @@ function fixForNearbyRoads(e: Edge) : boolean {
   // threshold, snap the end of the edge to that intersection
   let interCells : Array<number> = getCells(e);
   for(let i = 0; i < interCells.length; i++) {
-    for(let j = 0; j < interCells[i].length; j++) {
-      let inter = e.intersectionEdge(interCells[i][j]);
+    for(let j = 0; j < ecells[i].length; j++) {
+      let inter : vec2 = e.intersectionEdge(ecells[i][j]);
       if(inter != undefined && getNode(inter) == undefined) {
         let n : Node = new Node(inter, ncounter);
         ncounter++;
