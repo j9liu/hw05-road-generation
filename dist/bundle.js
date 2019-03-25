@@ -6282,7 +6282,7 @@ function drawHighway() {
     }
     console.log(turtle.position);
     let road = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, points[0], ecounter, true);
-    if (!fixForBounds(road) || !fixForWater(road)) {
+    if (!fixForBounds(road) || !fixForWater(road) || !fixForNearbyRoads(road)) {
         popTurtle();
         rotateTurtleCCW;
         return;
@@ -6325,8 +6325,38 @@ function rotateTurtleCCW() {
     turtle.rotate(controls.maxHighwayAngle);
 }
 function drawGrid(e) {
+    let blockWidth = 40;
+    let maxBlocks = Math.floor(Math.random() * e.getLength() / blockWidth);
+    let parallel = e.getDirectionVector();
+    let perpendicular = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, -parallel[0] / parallel[1]);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpendicular, perpendicular);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.position, e.endpoint1);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.orientation, parallel);
+    for (let i = 0; i < maxBlocks; i++) {
+        turtle.moveForward(blockWidth);
+        let perpEdge = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(maxBlocks * perpendicular[0], maxBlocks * perpendicular[1]), ecounter, false);
+        if (fixForBounds(perpEdge) && fixForWater(perpEdge) && fixForNearbyRoads(perpEdge)) {
+            ecounter++;
+            sortEdge(perpEdge);
+            smallRoads.push(perpEdge);
+        }
+        if (i == 0) {
+            pushTurtle();
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.orientation, perpendicular);
+            for (let j = 0; j < maxBlocks; j++) {
+                turtle.moveForward(blockWidth);
+                let parEdge = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(maxBlocks * parallel[0], maxBlocks * parallel[1]), ecounter, false);
+                if (fixForBounds(parEdge) && fixForWater(parEdge) && fixForNearbyRoads(parEdge)) {
+                    ecounter++;
+                    sortEdge(parEdge);
+                    smallRoads.push(parEdge);
+                }
+            }
+            popTurtle();
+        }
+    }
 }
-//// SELF-SENSITIVITY FUNCTIONS////
+//// CONSTRAINT FUNCTIONS////
 /* Checks if the edge goes too far off screen and adjusts the endpoints'
  * positions accordingly. If the resulting edge is long enough to be a
  * worthwhile road, return true; else, return false.
@@ -6430,7 +6460,7 @@ function createMeshes() {
 function renderEdge(e) {
     let midpoint = e.getMidpoint();
     let scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.getLength(), 2.);
-    let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(221. / 255., 221. / 255., 217. / 255., 1.3);
+    let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(80. / 255., 80. / 255., 80. / 255., 1.);
     if (e.highway) {
         scale[1] = 3.;
         color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(25. / 255., 25. / 225., 24. / 255., 1.);
