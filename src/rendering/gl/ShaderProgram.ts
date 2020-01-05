@@ -27,7 +27,7 @@ class ShaderProgram {
   attrTransform1: number; // Represents the columns of the transform matrix
   attrTransform2: number;
   attrTransform3: number;
-  attrUV: number;
+  //attrUV: number;
 
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
@@ -60,7 +60,7 @@ class ShaderProgram {
     this.attrTransform1 = gl.getAttribLocation(this.prog, "vs_Transform1");
     this.attrTransform2 = gl.getAttribLocation(this.prog, "vs_Transform2");
     this.attrTransform3 = gl.getAttribLocation(this.prog, "vs_Transform3");
-    this.attrUV         = gl.getAttribLocation(this.prog, "vs_UV");
+    //this.attrUV         = gl.getAttribLocation(this.prog, "vs_UV");
 
     this.unifModel            = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr       = gl.getUniformLocation(this.prog, "u_ModelInvTr");
@@ -204,12 +204,13 @@ class ShaderProgram {
       gl.vertexAttribPointer(this.attrTransform3, 3, gl.FLOAT, false, 0, 0);
       gl.vertexAttribDivisor(this.attrTransform3, 1); // Advance 1 index in translate VBO for each drawn instance
     }
-
+    /*
     if (this.attrUV != -1 && d.bindUV()) {
       gl.enableVertexAttribArray(this.attrUV);
       gl.vertexAttribPointer(this.attrUV, 2, gl.FLOAT, false, 0, 0);
       gl.vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
     }
+    */
 
     // TODO: Set up attribute data for additional instanced rendering data as needed
 
@@ -233,7 +234,7 @@ class ShaderProgram {
     if (this.attrTransform1 != -1) gl.disableVertexAttribArray(this.attrTransform1);
     if (this.attrTransform2 != -1) gl.disableVertexAttribArray(this.attrTransform2);
     if (this.attrTransform3 != -1) gl.disableVertexAttribArray(this.attrTransform3);
-    if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
+    //if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
   }
 };
 

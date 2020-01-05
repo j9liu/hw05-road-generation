@@ -5,12 +5,10 @@ import Square from './geometry/Square';
 import ScreenQuad from './geometry/ScreenQuad';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import Turtle from './Turtle';
-import DrawingRule from './DrawingRule';
-import Node from './Node';
-import Edge from './Edge';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import RoadGenerator from './road/RoadGenerator';
+import Edge from './road/Edge';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -35,10 +33,11 @@ let square: Square,
 
  const cw: number = 512;
  const ch: number = 512;
- const cwq = cw / 4;
- const chq = ch / 4;
 
-//// NOISE FUNCTIONS FOR DATA GENERATION ////
+ /* ***********************************
+  * NOISE FUNCTIONS FOR DATA GENERATION
+  * *********************************** */
+
 function random(p: vec2, seed: vec2) : number {
   let sum : vec2 = vec2.create();
   vec2.add(sum, p, seed);
@@ -114,384 +113,42 @@ function worleyNoise(p: vec2) : number {
     return shortest_distance / cellSize;
 }
 
-//// ELEVATION / POPULATION FUNCTIONS ////
-// The given point is always defined in city space.
+/* *********************************
+ * ELEVATION / POPULATION FUNCTIONS
+ * ********************************* */
+
+ // Since the elevation / population functions of the shader are defined
+ // for points on a screen-based quadrangle, we must convert points in
+ // city space from (0, 0) to (cw, ch) to (-1, -1) to  (1, 1)
+ function convertFromCitySpace(point: vec2) : vec2 {
+  let tpoint : vec2 = vec2.create();
+  vec2.divide(tpoint, point, vec2.fromValues(cw / 2, ch / 2));
+  vec2.subtract(tpoint, tpoint, vec2.fromValues(1, 1));
+  return tpoint;
+ }
+
 
 function getElevation(point : vec2) : number {
-  let tpoint : vec2 = vec2.create();
-  vec2.divide(tpoint, point, vec2.fromValues(cw, ch));
+  let tpoint : vec2 = convertFromCitySpace(point);
   let temp : vec2 = vec2.create();
   vec2.scaleAndAdd(temp, vec2.fromValues(1., -0.4), tpoint, 2);
   return Math.pow(fbm2(temp), 5.);
 }
 
 function getPopulation(point : vec2) : number {
-  let tpoint : vec2 = vec2.create();
-  vec2.divide(tpoint, point, vec2.fromValues(cw, ch));
+  let tpoint : vec2 = convertFromCitySpace(point);
   let temp : vec2 = vec2.create();
   vec2.scaleAndAdd(temp, vec2.fromValues(0.3, 7.0), tpoint, 2.);
   return 1. - worleyNoise(tpoint) * fbm2(temp);
 }
 
-//// DRAWING RULES ////
-let basic : DrawingRule = new DrawingRule();
-basic.addOutcome(drawHighway, 0.5);
-basic.addOutcome(drawBranch, 0.2)
-basic.addOutcome(rotateTurtleCW, 0.15);
-basic.addOutcome(rotateTurtleCCW, 0.15)
-
-let grid : DrawingRule = new DrawingRule();
-grid.addOutcome(drawGrid, 0.50);
-
-//// NODE, EDGE DATA ////
-let mainRoads : Array<Edge>;
-let smallRoads : Array<Edge>;
-let ncounter : number;
-let ecounter : number;
-
-/* Divide the cityspace into 16 cells;
-   Keep track of which edges intersect which cells
-   - CELL 0: (0, 0)                    to (cw / 4, ch / 4)
-   - CELL 1: (cw / 4, 0)               to (cw / 2, ch / 4)
-   - CELL 2: (cw / 2, 0)               to (3 * cw / 4, ch / 4)
-   - CELL 3: (3 * cw / 4, 0)           to (cw, ch / 4)
-   - CELL 4: (0, ch / 4)               to (cw / 4, ch / 2)
-   - CELL 5: (cw / 4, ch / 4)          to (cw / 2, ch / 2)
-   - CELL 6: (cw / 2, ch / 4)          to (3 * cw / 4, ch / 2)
-   - CELL 7: (3 * cw / 4, ch / 4)      to (cw, ch / 2)
-   - CELL 8:  (0, ch / 2)              to (cw / 4, 3 * ch / 4)
-   - CELL 9:  (cw / 4, ch / 2)         to (cw / 2, 3 * ch / 4)
-   - CELL 10: (cw / 2, ch / 2)         to (3 * cw / 4, 3 * ch / 4)
-   - CELL 11: (3 * cw / 4, ch / 2)     to (cw, 3 * ch / 4)
-   - CELL 12:  (0, 3 * ch / 4)         to (cw / 4, ch)
-   - CELL 13:  (cw / 4, 3 * ch / 4)    to (cw / 2, ch)
-   - CELL 14: (cw / 2, 3 * ch / 4)     to (3 * cw / 4, ch)
-   - CELL 15: (3 * cw / 4, 3 * ch / 4) to (cw, ch)
-*/
-let ecells : Array<Array<Edge>>;
-let ncells : Array<Array<Node>>;
-
-function sortEdge(e: Edge) {
-  for(let i = 0; i < 16; i++) {
-    let wScalar = i % 4;
-    let hScalar = Math.floor(i / 4);
-    if(e.intersectQuad(vec2.fromValues(wScalar * cwq, hScalar * chq),
-                       vec2.fromValues((wScalar + 1) * cwq, (hScalar + 1) * chq))) {
-      ecells[i].push(e);
-    }
-  }
-}
-
-function getCells(e: Edge) : Array<number> {
-  let ret : Array<number> = [];
-  for(let i = 0; i < 16; i++) {
-    let wScalar = i % 4;
-    let hScalar = Math.floor(i / 4);
-    if(e.intersectQuad(vec2.fromValues(wScalar * cwq, hScalar * chq),
-                       vec2.fromValues((wScalar + 1) * cwq, (hScalar + 1) * chq))) {
-      ret.push(i);
-    }
-  }
-  return ret;
-}
-
-function sortNode(n: Node) {
-  let cellx : number = Math.floor(n.x / cwq);  
-  let celly : number = Math.floor(n.y / chq);
-  let array : Array<Node> = ncells[4 * celly + cellx];
-  if(array == undefined) {
-    return;
-  }
-  array.push(n);
-}
-
-function getNode(pos: vec2) : Node {
-  let cellx : number = Math.floor(pos[0] / cwq);  
-  let celly : number = Math.floor(pos[1] / chq);
-  let array : Array<Node> = ncells[4 * celly + cellx];
-  if(array == undefined) {
-    return undefined;
-  }
-  for(let i = 0; i < array.length; i++) {
-    if(vec2.equals(array[i].position, pos)) {
-      return array[i];
-    }
-  }
-  return undefined;
-}
-
-function getNodeCell(pos: vec2) : number {
-  let cellx : number = Math.floor(pos[0] / cwq);  
-  let celly : number = Math.floor(pos[1] / chq);
-  if(ncells[4 * celly + cellx] == undefined) {
-    return undefined;
-  }
-  return 4 * celly + cellx;
-}
-
-//// TURTLE STACK & FUNCTIONS ////
-let turtleStack : Array<Turtle>;
-let turtle : Turtle;
-
-// Gets the most populated points within a specified amount, angle, and radius
-// w/ the water constraint.
-// If there is no suitable point, return an empty array
-function getMostPopulatedPoints(angle: number, radius : number, waterAllowed : boolean,
-                                num: number) : Array<vec2> {
-  let points : Array<vec2> = [];
-  for(let i = -angle / 2; i <= angle / 2; i += angle / 4) {
-    let tempTurtle : Turtle = new Turtle(turtle.position, turtle.orientation, turtle.depth);
-    tempTurtle.rotate(i);
-    tempTurtle.moveForward(radius);
-    let population = getPopulation(tempTurtle.position);
-    let elevation = getElevation(tempTurtle.position);
-    // Check for difficult elevation
-    if(elevation > 4.7) {
-      continue;
-    }
-    // Check for water if specified
-    if(!waterAllowed && elevation < controls.waterLevel) {
-      continue;
-    }
-
-    if(points.length >= num) {
-      let smallestPopulation = population;
-      let index = -1;
-      for(let j = 0; j < points.length; j++) {
-        let pop = getPopulation(points[j]);
-        if(pop < smallestPopulation) {
-          smallestPopulation = pop;
-          index = j;
-        }
-      }
-
-      if(index > 0) {
-        points[index][0] = tempTurtle.position[0];
-        points[index][1] = tempTurtle.position[1];
-      }
-
-    } else {
-      points.push(vec2.fromValues(tempTurtle.position[0], tempTurtle.position[1]));
-    }
-
-  }
-
-  return points;
-}
-
-function drawHighway() {
-  let radius : number = controls.maxHighwayLength / 4
-                      + (Math.random() * 3 * controls.maxHighwayLength / 4);
-  let points : Array<vec2> = getMostPopulatedPoints(controls.maxHighwayAngle, radius, true, 1);
-  if(points.length == 0) {
-    return;
-  }
-
-  console.log(turtle.position);
-  let road : Edge = new Edge(turtle.position, points[0], ecounter, true);
-  if(!fixForBounds(road) || !fixForWater(road) || !fixForNearbyRoads(road)) {
-    popTurtle();
-    rotateTurtleCCW;
-    return;
-  }
-
-  ecounter++;
-  sortEdge(road);
-  mainRoads.push(road);
-
-  let new_ori : vec2 = vec2.create();
-  vec2.subtract(new_ori, points[0], turtle.position);
-  vec2.normalize(new_ori, new_ori);
-  vec2.copy(turtle.orientation, new_ori);
-  vec2.copy(turtle.position, points[0]);
-  pushTurtle();
-}
-
-function drawBranch() {
-  let rand : number = Math.ceil(Math.random() * turtleStack.length);
-  for(let j = 0; j < rand; j++) {
-    popTurtle();
-  }
-  rotateTurtleCW();
-  drawHighway();
-}
-
-function pushTurtle() {
-  let temp : Turtle = new Turtle(turtle.position, turtle.orientation, turtle.depth);
-  turtleStack.push(temp);
-  turtle.depth += 1;
-}
-
-function popTurtle() {
-  if(turtleStack.length > 0) {
-    let temp : Turtle = turtleStack.pop();
-    turtle.position = temp.position;
-    turtle.orientation = temp.orientation;
-    turtle.depth -= 1;
-  }
-}
-
-function rotateTurtleCW() {
-  turtle.rotate(-controls.maxHighwayAngle);  
-}
-
-function rotateTurtleCCW() {
-  turtle.rotate(controls.maxHighwayAngle);
-}
-
-function drawGrid(e: Edge) {
-  let blockWidth = 40;
-  let maxBlocks : number = Math.floor(Math.random() * e.getLength() / blockWidth);
-  let parallel : vec2 = e.getDirectionVector();
-  let perpendicular : vec2 = vec2.fromValues(1, -parallel[0] / parallel[1]);
-  vec2.normalize(perpendicular, perpendicular);
-  vec2.copy(turtle.position, e.endpoint1);
-  vec2.copy(turtle.orientation, parallel);
-  for(let i = 0; i < maxBlocks; i++) {
-    turtle.moveForward(blockWidth);
-    let perpEdge : Edge = new Edge(turtle.position, vec2.fromValues(maxBlocks * perpendicular[0],
-                                                                    maxBlocks * perpendicular[1]),
-                                   ecounter, false);
-    if(fixForBounds(perpEdge) && fixForWater(perpEdge) && fixForNearbyRoads(perpEdge)) {
-      ecounter++;
-      sortEdge(perpEdge);
-      smallRoads.push(perpEdge);
-    }
-
-    if(i == 0) {
-      pushTurtle();
-      vec2.copy(turtle.orientation, perpendicular);
-      for(let j = 0; j < maxBlocks; j++) {
-        turtle.moveForward(blockWidth);
-        let parEdge : Edge = new Edge(turtle.position, vec2.fromValues(maxBlocks * parallel[0],
-                                                                       maxBlocks * parallel[1]),
-                                      ecounter, false);
-        if(fixForBounds(parEdge) && fixForWater(parEdge) && fixForNearbyRoads(parEdge)) {
-          ecounter++;
-          sortEdge(parEdge);
-          smallRoads.push(parEdge);
-        }
-      }
-      popTurtle();
-    }
-  }
-}
-
-//// CONSTRAINT FUNCTIONS////
-
-/* Checks if the edge goes too far off screen and adjusts the endpoints'
- * positions accordingly. If the resulting edge is long enough to be a
- * worthwhile road, return true; else, return false.
- */
-
-function fixForBounds(e: Edge): boolean {
-
-  if(e.endpoint2[0] < 0) {
-    e.endpoint2[0] = -10;
-  }
-
-  if(e.endpoint2[1] < 0) {
-    e.endpoint2[1] = 10;
-  }
-
-  if(e.endpoint2[0] > cw) {
-    e.endpoint2[0] = cw + 10;
-  }
-
-  if(e.endpoint2[1] > ch) {
-    e.endpoint2[1] = ch + 10;
-  }
-
-  return e.getLength() > 20.;
-}
-
-/* Checks if the edge goes into the water and tries to adjust the endpoints'
- * positions accordingly. If the resulting edge can fit on land or is long enough
- * to be a worthwhile road, return true; else, return false.
- */
-
-function fixForWater(e: Edge): boolean {
-  // Test if the newest endpoint is in the water.
-  if(getElevation(e.endpoint2) >= controls.waterLevel) {
-    return true;
-  }
-
-  // If the road is a highway, we can try to extend it to an island within reach,
-  // as long as it is under the maximum highway length.
-  if(e.highway && e.getLength() < controls.maxHighwayLength) {
-    let increment : vec2 = e.getDirectionVector();
-    vec2.scale(increment, increment, (controls.maxHighwayLength - e.getLength()) / 5);
-    let temp : vec2 = vec2.create();
-    vec2.copy(temp, e.endpoint2);
-    for(let i = 0; i < 5; i++) {
-      vec2.add(temp, temp, increment);
-      if(getElevation(temp) >= controls.waterLevel) {
-        vec2.copy(e.endpoint2, temp);
-        return true;
-      }
-    }
-  }
-
-  // Otherwise, we slowly march the end of the edge back in the direction of the road
-  // until we either find water or reach the start point.
-  let increment : vec2 = e.getDirectionVector();
-  vec2.scale(increment, increment, e.getLength() / 10);
-  let temp : vec2 = vec2.create();
-  for(let i = 0; i < 10; i++) {
-    vec2.subtract(temp, e.endpoint2, increment);
-    vec2.copy(e.endpoint2, temp);
-    if(getElevation(e.endpoint2) >= controls.waterLevel) {
-      break;
-    }
-  }
-  return e.getLength() > 20.;
-}
-
-/* Adjusts the road based on the surrounding road network,
- * adds intersections where necessary. If the resulting edge is long enough
- * to be a worthwhile road, return true; else, return false.
- */
-function fixForNearbyRoads(e: Edge) : boolean {
-  // Search for the closest Node; if it falls within a small radius, snap
-  // the edge to that node.
-  let endCell : number = getNodeCell(e.endpoint2);
-  let closest: Node;
-  let closestDistance: number = 1000;
-  if(endCell != undefined) {
-    for(let i = 0; i < ncells[endCell].length; i++) {
-      if(ncells[endCell][i].distanceFrom(e.endpoint2) < closestDistance) {
-        closest = ncells[endCell][i];
-      }
-    }
-    if(closest != undefined && closestDistance < 30) {
-      vec2.copy(e.endpoint2, closest.position);
-    }
-  }
-
-  // Add new intersections where the edge intersects other edges;
-  // keep track of the closest one, and if it is within a reasonable
-  // threshold, snap the end of the edge to that intersection
-  let interCells : Array<number> = getCells(e);
-  for(let i = 0; i < interCells.length; i++) {
-    for(let j = 0; j < ecells[i].length; j++) {
-      let inter : vec2 = e.intersectionEdge(ecells[i][j]);
-      if(inter != undefined && getNode(inter) == undefined) {
-        let n : Node = new Node(inter, ncounter);
-        ncounter++;
-      }
-    }
-  }
-
-  return e.getLength() > 15.;
-
-}  
-
-//// RENDER DATA ARRAYS ////
+/* *******************
+ * RENDERING FUNCTIONS
+ * ******************* */
 let roadTCol1Array : Array<number>,
     roadTCol2Array : Array<number>,
     roadTCol3Array : Array<number>,
     roadColorsArray : Array<number>;
-
 
 function createMeshes() {
   square = new Square();  
@@ -502,12 +159,13 @@ function createMeshes() {
 
 function renderEdge(e: Edge) {
   let midpoint : vec2 = e.getMidpoint();
-  let scale : vec2 = vec2.fromValues(e.getLength(), 2.);
+  let scale : vec2 = vec2.fromValues(e.getLength(), 1.);
   let color : vec4 = vec4.fromValues(80. / 255., 80. / 255., 80. / 255., 1.);
   if(e.highway) {
-    scale[1] = 3.;
+    scale[1] = 2.;
     color = vec4.fromValues(25. / 255., 25. / 225., 24. / 255., 1.);
   }
+  
   let angle : number = Math.atan2(e.endpoint1[1] - e.endpoint2[1],
                                   e.endpoint1[0] - e.endpoint2[0]);
   let transform : mat3 = mat3.create();
@@ -531,73 +189,76 @@ function renderEdge(e: Edge) {
   }
 }
 
+
 function loadScene() {
-  // Reset data
-  mainRoads = [];
-  smallRoads = [];
-  ecells = [];
-  ncells = [];
-  for(let i = 0; i < 16; i++) {
-    ecells.push([]);
-    ncells.push([]);
-  }
-  ncounter = 0;
-  ecounter = 0;
+  // Setup buffers 
+  /*
+  var texture_fb = gl.createFramebuffer();
+  var texture_rb = gl.createRenderbuffer();
+  var texture = gl.createTexture();
+  const t_width = window.innerWidth;
+  const t_height = window.innerHeight;
 
-  turtleStack = [];
-  let startingPoint : vec2 = vec2.fromValues(Math.random() * cw, Math.random() * ch);
-  let cutoff : number = 25;
-  while(getElevation(startingPoint) < controls.waterLevel && cutoff > 0) {
-    startingPoint = vec2.fromValues(Math.random() * cw, Math.random() * ch);
-    cutoff--;
-  }
+  // Bind the texture
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t_width, t_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  
+  // Set texture's render settings
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  turtle = new Turtle(vec2.fromValues(startingPoint[0], startingPoint[1]),
-                                 vec2.fromValues(-1, 0), 0);
-  turtleStack.push(turtle);
+  // Bind the frame buffer
+  gl.bindFramebuffer(gl.FRAMEBUFFER, texture_fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-  // Face the turtle in the direction of the densest population. 
-  roadTCol1Array = [],
+  // Bind the render buffer
+  gl.bindRenderbuffer(gl.RENDERBUFFER, texture_rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, t_width, t_height);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, tex_renderBuffer);
+
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+  // Set GL window size
+  gl.viewport(0, 0, t_width, t_height);
+
+  // Clear the screen
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // Get the raw data and save it in a texture
+  renderer.render(camera, flat, [screenQuad], proj2D, true, true, controls.waterLevel);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+  var textureData : Uint8Array = new Uint8Array(t_width * t_height * 4);
+  gl.readPixels(0, 0, t_width, t_height, gl.RGBA, gl.UNSIGNED_BYTE, textureData);
+  console.log(textureData);
+  */
+  
+  roadTCol1Array = [],  
   roadTCol2Array = [],
   roadTCol3Array = [],
   roadColorsArray = [];
 
-  // Guarantee we start off with one road.
-  drawHighway();
-
-  // Generate basic road network
-  for(let i = 0; i < 15; i++) {
-    let func = basic.getOutcome();
-    if(func) {
-      func();
-    }
-  }
-
-  // Generate grid road network
-  for(let i = 0; i < mainRoads.length; i++) {
-    let func = grid.getOutcome();
-    if(func) {
-      func(mainRoads[i]);
-    }
-  }
+  renderEdge(new Edge(vec2.fromValues(0, 0), vec2.fromValues(10, 0), 0, false));
 
   // Convert edges to render data
+  /*
   for(let i = 0; i < mainRoads.length; i++) {
     renderEdge(mainRoads[i]);
   }
 
   for(let i = 0; i < smallRoads.length; i++) {
     renderEdge(smallRoads[i]);
-  }
+  }*/
 
   square.setInstanceVBOs(new Float32Array(roadTCol1Array),
                          new Float32Array(roadTCol2Array),
                          new Float32Array(roadTCol3Array),
                          new Float32Array(roadColorsArray));
-  square.setNumInstances(mainRoads.length + smallRoads.length);
+  square.setNumInstances(1);
 }
 
 function main() {
+
   // Initial display for framerate
   const stats = Stats();
   stats.setMode(0);
@@ -628,9 +289,6 @@ function main() {
   // Create meshes
   createMeshes();
 
-  // Initial call to load scene
-  loadScene();
-
   const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
 
   const renderer = new OpenGLRenderer(canvas);
@@ -649,21 +307,31 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/instanced-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/instanced-frag.glsl')),
   ]);
-
+  /*
   const flat = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
+  ]);*/
+
+  const data = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/data-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/data-frag.glsl')),
   ]);
+
+  // Initial call to load scene
+  loadScene();
 
   // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();
     instancedShader.setTime(time);
-    flat.setTime(time++);
+    data.setTime(time++);
+    // Clear frame buffer (render to canvas)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    renderer.render(camera, flat, [screenQuad], proj2D,
+    renderer.render(camera, data, [screenQuad], proj2D,
                     controls.displayElevation, controls.displayPopDensity, controls.waterLevel);
     renderer.render(camera, instancedShader, [
       square,
@@ -678,13 +346,13 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
-    flat.setDimensions(window.innerWidth, window.innerHeight);
+    data.setDimensions(window.innerWidth, window.innerHeight);
   }, false);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
-  flat.setDimensions(window.innerWidth, window.innerHeight);
+  data.setDimensions(window.innerWidth, window.innerHeight);
 
   // Start the render loop
   tick();
