@@ -125,13 +125,13 @@ function equals(a, b) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__gl_matrix_common_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__gl_matrix_mat2_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__gl_matrix_mat2d_js__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__gl_matrix_mat3_js__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__gl_matrix_mat4_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__gl_matrix_quat_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__gl_matrix_mat3_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__gl_matrix_mat4_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__gl_matrix_quat_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__gl_matrix_quat2_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__gl_matrix_vec2_js__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__gl_matrix_vec3_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__gl_matrix_vec4_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__gl_matrix_vec3_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__gl_matrix_vec4_js__ = __webpack_require__(10);
 /* unused harmony reexport glMatrix */
 /* unused harmony reexport mat2 */
 /* unused harmony reexport mat2d */
@@ -230,6 +230,130 @@ function invert(out, a) {
 
 /***/ }),
 /* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(2);
+
+class Drawable {
+    constructor() {
+        this.count = 0;
+        this.idxGenerated = false;
+        this.posGenerated = false;
+        this.norGenerated = false;
+        this.colGenerated = false;
+        this.transform1Generated = false;
+        this.transform2Generated = false;
+        this.transform3Generated = false;
+        this.uvGenerated = false;
+        this.numInstances = 0; // How many instances of this Drawable the shader program should draw
+    }
+    destroy() {
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufIdx);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufPos);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufNor);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufCol);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform1);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform2);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform3);
+        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufUV);
+    }
+    generateIdx() {
+        this.idxGenerated = true;
+        this.bufIdx = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generatePos() {
+        this.posGenerated = true;
+        this.bufPos = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateNor() {
+        this.norGenerated = true;
+        this.bufNor = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateCol() {
+        this.colGenerated = true;
+        this.bufCol = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateTransform1() {
+        this.transform1Generated = true;
+        this.bufTransform1 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateTransform2() {
+        this.transform2Generated = true;
+        this.bufTransform2 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateTransform3() {
+        this.transform3Generated = true;
+        this.bufTransform3 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    generateUV() {
+        this.uvGenerated = true;
+        this.bufUV = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
+    }
+    bindIdx() {
+        if (this.idxGenerated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
+        }
+        return this.idxGenerated;
+    }
+    bindPos() {
+        if (this.posGenerated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
+        }
+        return this.posGenerated;
+    }
+    bindNor() {
+        if (this.norGenerated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufNor);
+        }
+        return this.norGenerated;
+    }
+    bindCol() {
+        if (this.colGenerated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufCol);
+        }
+        return this.colGenerated;
+    }
+    bindTransform1() {
+        if (this.transform1Generated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform1);
+        }
+        return this.transform1Generated;
+    }
+    bindTransform2() {
+        if (this.transform2Generated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform2);
+        }
+        return this.transform2Generated;
+    }
+    bindTransform3() {
+        if (this.transform3Generated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform3);
+        }
+        return this.transform3Generated;
+    }
+    bindUV() {
+        if (this.uvGenerated) {
+            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufUV);
+        }
+        return this.uvGenerated;
+    }
+    elemCount() {
+        return this.count;
+    }
+    drawMode() {
+        return __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].TRIANGLES;
+    }
+    setNumInstances(num) {
+        this.numInstances = num;
+    }
+}
+;
+/* harmony default export */ __webpack_exports__["a"] = (Drawable);
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = normalize;
@@ -257,7 +381,7 @@ function normalize(out, a) {
 }
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1107,7 +1231,7 @@ var mul = multiply;
 var sub = subtract;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3003,7 +3127,7 @@ var mul = multiply;
 var sub = subtract;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3043,9 +3167,9 @@ var sub = subtract;
 /* unused harmony export sqlerp */
 /* unused harmony export setAxes */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_js__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mat3_js__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vec3_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__vec4_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__mat3_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__vec3_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__vec4_js__ = __webpack_require__(10);
 
 
 
@@ -3709,7 +3833,7 @@ var setAxes = function () {
 }();
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4551,7 +4675,7 @@ var forEach = function () {
 }();
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5212,130 +5336,6 @@ var forEach = function () {
 }();
 
 /***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(2);
-
-class Drawable {
-    constructor() {
-        this.count = 0;
-        this.idxGenerated = false;
-        this.posGenerated = false;
-        this.norGenerated = false;
-        this.colGenerated = false;
-        this.transform1Generated = false;
-        this.transform2Generated = false;
-        this.transform3Generated = false;
-        this.uvGenerated = false;
-        this.numInstances = 0; // How many instances of this Drawable the shader program should draw
-    }
-    destroy() {
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufIdx);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufPos);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufNor);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufCol);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform1);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform2);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufTransform3);
-        __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].deleteBuffer(this.bufUV);
-    }
-    generateIdx() {
-        this.idxGenerated = true;
-        this.bufIdx = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generatePos() {
-        this.posGenerated = true;
-        this.bufPos = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateNor() {
-        this.norGenerated = true;
-        this.bufNor = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateCol() {
-        this.colGenerated = true;
-        this.bufCol = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateTransform1() {
-        this.transform1Generated = true;
-        this.bufTransform1 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateTransform2() {
-        this.transform2Generated = true;
-        this.bufTransform2 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateTransform3() {
-        this.transform3Generated = true;
-        this.bufTransform3 = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    generateUV() {
-        this.uvGenerated = true;
-        this.bufUV = __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].createBuffer();
-    }
-    bindIdx() {
-        if (this.idxGenerated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
-        }
-        return this.idxGenerated;
-    }
-    bindPos() {
-        if (this.posGenerated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
-        }
-        return this.posGenerated;
-    }
-    bindNor() {
-        if (this.norGenerated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufNor);
-        }
-        return this.norGenerated;
-    }
-    bindCol() {
-        if (this.colGenerated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufCol);
-        }
-        return this.colGenerated;
-    }
-    bindTransform1() {
-        if (this.transform1Generated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform1);
-        }
-        return this.transform1Generated;
-    }
-    bindTransform2() {
-        if (this.transform2Generated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform2);
-        }
-        return this.transform2Generated;
-    }
-    bindTransform3() {
-        if (this.transform3Generated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform3);
-        }
-        return this.transform3Generated;
-    }
-    bindUV() {
-        if (this.uvGenerated) {
-            __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].ARRAY_BUFFER, this.bufUV);
-        }
-        return this.uvGenerated;
-    }
-    elemCount() {
-        return this.count;
-    }
-    drawMode() {
-        return __WEBPACK_IMPORTED_MODULE_0__globals__["a" /* gl */].TRIANGLES;
-    }
-    setNumInstances(num) {
-        this.numInstances = num;
-    }
-}
-;
-/* harmony default export */ __webpack_exports__["a"] = (Drawable);
-
-
-/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5344,7 +5344,7 @@ class Drawable {
 
 module.exports = createFilteredVector
 
-var cubicHermite = __webpack_require__(39)
+var cubicHermite = __webpack_require__(40)
 var bsearch = __webpack_require__(12)
 
 function clamp(lo, hi, x) {
@@ -6027,16 +6027,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dat_gui__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__geometry_Square__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__geometry_ScreenQuad__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__rendering_gl_OpenGLRenderer__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Camera__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__Turtle__ = __webpack_require__(68);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__DrawingRule__ = __webpack_require__(69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__Node__ = __webpack_require__(70);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__Edge__ = __webpack_require__(71);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__globals__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__ = __webpack_require__(72);
-
-
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__geometry_Circle__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__rendering_gl_OpenGLRenderer__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__Camera__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__globals__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__ = __webpack_require__(69);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__road_RoadGenerator__ = __webpack_require__(70);
 
 
 
@@ -6054,418 +6050,33 @@ const controls = {
     displayElevation: false,
     displayPopDensity: false,
     waterLevel: 0.5,
+    branchThreshold: 45,
     maxHighwayLength: 200,
-    maxHighwayAngle: 60,
     'Generate': loadScene
 };
-let square, screenQuad, time = 0.0;
-/*
- * Define the bounds of "city space", which will to go from (0, 0) in the lower left corner
- * to (cw, ch) in the upper right corner. All coordinates here function within that space
- * and are then transformed to fit the screen at the end.
- */
-const cw = 512;
-const ch = 512;
-const cwq = cw / 4;
-const chq = ch / 4;
-//// NOISE FUNCTIONS FOR DATA GENERATION ////
-function random(p, seed) {
-    let sum = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(sum, p, seed);
-    let temp = Math.sin(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(sum, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(127.1 * 43758.5453, 311.7 * 43758.5453)));
-    return temp - Math.floor(temp);
-}
-function interpNoise2D(x, y) {
-    let intX = Math.floor(x);
-    let fractX = x - intX;
-    let intY = Math.floor(y);
-    let fractY = x - intY;
-    let v1 = random(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(intX, intY), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 0));
-    let v2 = random(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(intX + 1, intY), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 0));
-    let v3 = random(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(intX, intY + 1), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 0));
-    let v4 = random(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(intX + 1, intY + 1), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 0));
-    let i1 = v1 * (1 - fractX) + v2 * fractX;
-    let i2 = v3 * (1 - fractX) + v4 * fractX;
-    return i1 * (1 - fractY) + i2 * fractY;
-}
-function fbm2(p) {
-    let total = 0.;
-    let persistence = 0.5;
-    let octaves = 8;
-    for (let i = 0; i < octaves; i++) {
-        let freq = Math.pow(2., i);
-        let amp = Math.pow(persistence, i);
-        total += interpNoise2D(p[0] * freq, p[1] * freq) * amp;
-    }
-    return total;
-}
-let cellSize = 2.;
-function generate_point(cell) {
-    let p = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cell[0], cell[1]);
-    let rand = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(p, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(127.1, 311.7)), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(p, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(269.5, 183.3)) * 43758.5453);
-    let r0 = Math.sin(rand[0]);
-    let r1 = Math.sin(rand[1]);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(p, p, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(r0 - Math.floor(r0), r1 - Math.floor(r1)));
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(p, p, cellSize);
-    return p;
-}
-function worleyNoise(p) {
-    let cell = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.floor(p[0] / cellSize), Math.floor(p[1] / cellSize));
-    let point = generate_point(cell);
-    let shortest_distance = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(p, point);
-    // compute shortest distance from cell + neighboring cell points
-    for (let i = -1.; i <= 1.; i += 1.) {
-        let ncell_x = cell[0] + i;
-        for (let j = -1.; j <= 1.; j += 1.) {
-            let ncell_y = cell[1] + j;
-            // get the point for that cell
-            let npoint = generate_point(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(ncell_x, ncell_y));
-            // compare to previous distances
-            let distance = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(p, npoint);
-            if (distance < shortest_distance) {
-                shortest_distance = distance;
-            }
-        }
-    }
-    return shortest_distance / cellSize;
-}
-//// ELEVATION / POPULATION FUNCTIONS ////
-// The given point is always defined in city space.
-function getElevation(point) {
-    let tpoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].divide(tpoint, point, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cw, ch));
-    let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(temp, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1., -0.4), tpoint, 2);
-    return Math.pow(fbm2(temp), 5.);
-}
-function getPopulation(point) {
-    let tpoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].divide(tpoint, point, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cw, ch));
-    let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(temp, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0.3, 7.0), tpoint, 2.);
-    return 1. - worleyNoise(tpoint) * fbm2(temp);
-}
-//// DRAWING RULES ////
-let basic = new __WEBPACK_IMPORTED_MODULE_8__DrawingRule__["a" /* default */]();
-basic.addOutcome(drawHighway, 0.5);
-basic.addOutcome(drawBranch, 0.2);
-basic.addOutcome(rotateTurtleCW, 0.15);
-basic.addOutcome(rotateTurtleCCW, 0.15);
-let grid = new __WEBPACK_IMPORTED_MODULE_8__DrawingRule__["a" /* default */]();
-grid.addOutcome(drawGrid, 0.50);
-//// NODE, EDGE DATA ////
-let mainRoads;
-let smallRoads;
-let ncounter;
-let ecounter;
-/* Divide the cityspace into 16 cells;
-   Keep track of which edges intersect which cells
-   - CELL 0: (0, 0)                    to (cw / 4, ch / 4)
-   - CELL 1: (cw / 4, 0)               to (cw / 2, ch / 4)
-   - CELL 2: (cw / 2, 0)               to (3 * cw / 4, ch / 4)
-   - CELL 3: (3 * cw / 4, 0)           to (cw, ch / 4)
-   - CELL 4: (0, ch / 4)               to (cw / 4, ch / 2)
-   - CELL 5: (cw / 4, ch / 4)          to (cw / 2, ch / 2)
-   - CELL 6: (cw / 2, ch / 4)          to (3 * cw / 4, ch / 2)
-   - CELL 7: (3 * cw / 4, ch / 4)      to (cw, ch / 2)
-   - CELL 8:  (0, ch / 2)              to (cw / 4, 3 * ch / 4)
-   - CELL 9:  (cw / 4, ch / 2)         to (cw / 2, 3 * ch / 4)
-   - CELL 10: (cw / 2, ch / 2)         to (3 * cw / 4, 3 * ch / 4)
-   - CELL 11: (3 * cw / 4, ch / 2)     to (cw, 3 * ch / 4)
-   - CELL 12:  (0, 3 * ch / 4)         to (cw / 4, ch)
-   - CELL 13:  (cw / 4, 3 * ch / 4)    to (cw / 2, ch)
-   - CELL 14: (cw / 2, 3 * ch / 4)     to (3 * cw / 4, ch)
-   - CELL 15: (3 * cw / 4, 3 * ch / 4) to (cw, ch)
-*/
-let ecells;
-let ncells;
-function sortEdge(e) {
-    for (let i = 0; i < 16; i++) {
-        let wScalar = i % 4;
-        let hScalar = Math.floor(i / 4);
-        if (e.intersectQuad(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(wScalar * cwq, hScalar * chq), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues((wScalar + 1) * cwq, (hScalar + 1) * chq))) {
-            ecells[i].push(e);
-        }
-    }
-}
-function getCells(e) {
-    let ret = [];
-    for (let i = 0; i < 16; i++) {
-        let wScalar = i % 4;
-        let hScalar = Math.floor(i / 4);
-        if (e.intersectQuad(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(wScalar * cwq, hScalar * chq), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues((wScalar + 1) * cwq, (hScalar + 1) * chq))) {
-            ret.push(i);
-        }
-    }
-    return ret;
-}
-function sortNode(n) {
-    let cellx = Math.floor(n.x / cwq);
-    let celly = Math.floor(n.y / chq);
-    let array = ncells[4 * celly + cellx];
-    if (array == undefined) {
-        return;
-    }
-    array.push(n);
-}
-function getNode(pos) {
-    let cellx = Math.floor(pos[0] / cwq);
-    let celly = Math.floor(pos[1] / chq);
-    let array = ncells[4 * celly + cellx];
-    if (array == undefined) {
-        return undefined;
-    }
-    for (let i = 0; i < array.length; i++) {
-        if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].equals(array[i].position, pos)) {
-            return array[i];
-        }
-    }
-    return undefined;
-}
-function getNodeCell(pos) {
-    let cellx = Math.floor(pos[0] / cwq);
-    let celly = Math.floor(pos[1] / chq);
-    if (ncells[4 * celly + cellx] == undefined) {
-        return undefined;
-    }
-    return 4 * celly + cellx;
-}
-//// TURTLE STACK & FUNCTIONS ////
-let turtleStack;
-let turtle;
-// Gets the most populated points within a specified amount, angle, and radius
-// w/ the water constraint.
-// If there is no suitable point, return an empty array
-function getMostPopulatedPoints(angle, radius, waterAllowed, num) {
-    let points = [];
-    for (let i = -angle / 2; i <= angle / 2; i += angle / 4) {
-        let tempTurtle = new __WEBPACK_IMPORTED_MODULE_7__Turtle__["a" /* default */](turtle.position, turtle.orientation, turtle.depth);
-        tempTurtle.rotate(i);
-        tempTurtle.moveForward(radius);
-        let population = getPopulation(tempTurtle.position);
-        let elevation = getElevation(tempTurtle.position);
-        // Check for difficult elevation
-        if (elevation > 4.7) {
-            continue;
-        }
-        // Check for water if specified
-        if (!waterAllowed && elevation < controls.waterLevel) {
-            continue;
-        }
-        if (points.length >= num) {
-            let smallestPopulation = population;
-            let index = -1;
-            for (let j = 0; j < points.length; j++) {
-                let pop = getPopulation(points[j]);
-                if (pop < smallestPopulation) {
-                    smallestPopulation = pop;
-                    index = j;
-                }
-            }
-            if (index > 0) {
-                points[index][0] = tempTurtle.position[0];
-                points[index][1] = tempTurtle.position[1];
-            }
-        }
-        else {
-            points.push(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(tempTurtle.position[0], tempTurtle.position[1]));
-        }
-    }
-    return points;
-}
-function drawHighway() {
-    let radius = controls.maxHighwayLength / 4
-        + (Math.random() * 3 * controls.maxHighwayLength / 4);
-    let points = getMostPopulatedPoints(controls.maxHighwayAngle, radius, true, 1);
-    if (points.length == 0) {
-        return;
-    }
-    console.log(turtle.position);
-    let road = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, points[0], ecounter, true);
-    if (!fixForBounds(road) || !fixForWater(road) || !fixForNearbyRoads(road)) {
-        popTurtle();
-        rotateTurtleCCW;
-        return;
-    }
-    ecounter++;
-    sortEdge(road);
-    mainRoads.push(road);
-    let new_ori = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(new_ori, points[0], turtle.position);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(new_ori, new_ori);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.orientation, new_ori);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.position, points[0]);
-    pushTurtle();
-}
-function drawBranch() {
-    let rand = Math.ceil(Math.random() * turtleStack.length);
-    for (let j = 0; j < rand; j++) {
-        popTurtle();
-    }
-    rotateTurtleCW();
-    drawHighway();
-}
-function pushTurtle() {
-    let temp = new __WEBPACK_IMPORTED_MODULE_7__Turtle__["a" /* default */](turtle.position, turtle.orientation, turtle.depth);
-    turtleStack.push(temp);
-    turtle.depth += 1;
-}
-function popTurtle() {
-    if (turtleStack.length > 0) {
-        let temp = turtleStack.pop();
-        turtle.position = temp.position;
-        turtle.orientation = temp.orientation;
-        turtle.depth -= 1;
-    }
-}
-function rotateTurtleCW() {
-    turtle.rotate(-controls.maxHighwayAngle);
-}
-function rotateTurtleCCW() {
-    turtle.rotate(controls.maxHighwayAngle);
-}
-function drawGrid(e) {
-    let blockWidth = 40;
-    let maxBlocks = Math.floor(Math.random() * e.getLength() / blockWidth);
-    let parallel = e.getDirectionVector();
-    let perpendicular = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, -parallel[0] / parallel[1]);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpendicular, perpendicular);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.position, e.endpoint1);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.orientation, parallel);
-    for (let i = 0; i < maxBlocks; i++) {
-        turtle.moveForward(blockWidth);
-        let perpEdge = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(maxBlocks * perpendicular[0], maxBlocks * perpendicular[1]), ecounter, false);
-        if (fixForBounds(perpEdge) && fixForWater(perpEdge) && fixForNearbyRoads(perpEdge)) {
-            ecounter++;
-            sortEdge(perpEdge);
-            smallRoads.push(perpEdge);
-        }
-        if (i == 0) {
-            pushTurtle();
-            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(turtle.orientation, perpendicular);
-            for (let j = 0; j < maxBlocks; j++) {
-                turtle.moveForward(blockWidth);
-                let parEdge = new __WEBPACK_IMPORTED_MODULE_10__Edge__["a" /* default */](turtle.position, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(maxBlocks * parallel[0], maxBlocks * parallel[1]), ecounter, false);
-                if (fixForBounds(parEdge) && fixForWater(parEdge) && fixForNearbyRoads(parEdge)) {
-                    ecounter++;
-                    sortEdge(parEdge);
-                    smallRoads.push(parEdge);
-                }
-            }
-            popTurtle();
-        }
-    }
-}
-//// CONSTRAINT FUNCTIONS////
-/* Checks if the edge goes too far off screen and adjusts the endpoints'
- * positions accordingly. If the resulting edge is long enough to be a
- * worthwhile road, return true; else, return false.
- */
-function fixForBounds(e) {
-    if (e.endpoint2[0] < 0) {
-        e.endpoint2[0] = -10;
-    }
-    if (e.endpoint2[1] < 0) {
-        e.endpoint2[1] = 10;
-    }
-    if (e.endpoint2[0] > cw) {
-        e.endpoint2[0] = cw + 10;
-    }
-    if (e.endpoint2[1] > ch) {
-        e.endpoint2[1] = ch + 10;
-    }
-    return e.getLength() > 20.;
-}
-/* Checks if the edge goes into the water and tries to adjust the endpoints'
- * positions accordingly. If the resulting edge can fit on land or is long enough
- * to be a worthwhile road, return true; else, return false.
- */
-function fixForWater(e) {
-    // Test if the newest endpoint is in the water.
-    if (getElevation(e.endpoint2) >= controls.waterLevel) {
-        return true;
-    }
-    // If the road is a highway, we can try to extend it to an island within reach,
-    // as long as it is under the maximum highway length.
-    if (e.highway && e.getLength() < controls.maxHighwayLength) {
-        let increment = e.getDirectionVector();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, (controls.maxHighwayLength - e.getLength()) / 5);
-        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(temp, e.endpoint2);
-        for (let i = 0; i < 5; i++) {
-            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, temp, increment);
-            if (getElevation(temp) >= controls.waterLevel) {
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
-                return true;
-            }
-        }
-    }
-    // Otherwise, we slowly march the end of the edge back in the direction of the road
-    // until we either find water or reach the start point.
-    let increment = e.getDirectionVector();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, e.getLength() / 10);
-    let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-    for (let i = 0; i < 10; i++) {
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(temp, e.endpoint2, increment);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
-        if (getElevation(e.endpoint2) >= controls.waterLevel) {
-            break;
-        }
-    }
-    return e.getLength() > 20.;
-}
-/* Adjusts the road based on the surrounding road network,
- * adds intersections where necessary. If the resulting edge is long enough
- * to be a worthwhile road, return true; else, return false.
- */
-function fixForNearbyRoads(e) {
-    // Search for the closest Node; if it falls within a small radius, snap
-    // the edge to that node.
-    let endCell = getNodeCell(e.endpoint2);
-    let closest;
-    let closestDistance = 1000;
-    if (endCell != undefined) {
-        for (let i = 0; i < ncells[endCell].length; i++) {
-            if (ncells[endCell][i].distanceFrom(e.endpoint2) < closestDistance) {
-                closest = ncells[endCell][i];
-            }
-        }
-        if (closest != undefined && closestDistance < 30) {
-            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, closest.position);
-        }
-    }
-    // Add new intersections where the edge intersects other edges;
-    // keep track of the closest one, and if it is within a reasonable
-    // threshold, snap the end of the edge to that intersection
-    let interCells = getCells(e);
-    for (let i = 0; i < interCells.length; i++) {
-        for (let j = 0; j < ecells[i].length; j++) {
-            let inter = e.intersectionEdge(ecells[i][j]);
-            if (inter != undefined && getNode(inter) == undefined) {
-                let n = new __WEBPACK_IMPORTED_MODULE_9__Node__["a" /* default */](inter, ncounter);
-                ncounter++;
-            }
-        }
-    }
-    return e.getLength() > 15.;
-}
-//// RENDER DATA ARRAYS ////
+let square, screenQuad, circle, time = 0.0, cityHeight = 512, // the width will scale based on window's aspect ratio.
+gridHeight = 8, aspectRatio = window.innerWidth / window.innerHeight, rgen;
+/* *******************
+ * RENDERING FUNCTIONS
+ * ******************* */
 let roadTCol1Array, roadTCol2Array, roadTCol3Array, roadColorsArray;
 function createMeshes() {
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
     square.create();
     screenQuad = new __WEBPACK_IMPORTED_MODULE_4__geometry_ScreenQuad__["a" /* default */]();
     screenQuad.create();
+    circle = new __WEBPACK_IMPORTED_MODULE_5__geometry_Circle__["a" /* default */]();
+    circle.create();
 }
 function renderEdge(e) {
     let midpoint = e.getMidpoint();
-    let scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.getLength(), 2.);
+    let scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.getLength(), 1.4);
     let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(80. / 255., 80. / 255., 80. / 255., 1.);
     if (e.highway) {
         scale[1] = 3.;
         color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(25. / 255., 25. / 225., 24. / 255., 1.);
     }
-    let angle = Math.atan2(e.endpoint1[1] - e.endpoint2[1], e.endpoint1[0] - e.endpoint2[0]);
+    let angle = Math.atan2(e.endpoint2[1] - e.endpoint1[1], e.endpoint2[0] - e.endpoint1[0]);
     let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
     let scaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
     let rotateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
@@ -6485,56 +6096,37 @@ function renderEdge(e) {
     }
 }
 function loadScene() {
-    // Reset data
-    mainRoads = [];
-    smallRoads = [];
-    ecells = [];
-    ncells = [];
-    for (let i = 0; i < 16; i++) {
-        ecells.push([]);
-        ncells.push([]);
-    }
-    ncounter = 0;
-    ecounter = 0;
-    turtleStack = [];
-    let startingPoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.random() * cw, Math.random() * ch);
-    let cutoff = 25;
-    while (getElevation(startingPoint) < controls.waterLevel && cutoff > 0) {
-        startingPoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.random() * cw, Math.random() * ch);
-        cutoff--;
-    }
-    turtle = new __WEBPACK_IMPORTED_MODULE_7__Turtle__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(startingPoint[0], startingPoint[1]), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(-1, 0), 0);
-    turtleStack.push(turtle);
-    // Face the turtle in the direction of the densest population. 
     roadTCol1Array = [],
         roadTCol2Array = [],
         roadTCol3Array = [],
         roadColorsArray = [];
-    // Guarantee we start off with one road.
-    drawHighway();
-    // Generate basic road network
-    for (let i = 0; i < 15; i++) {
-        let func = basic.getOutcome();
-        if (func) {
-            func();
-        }
-    }
-    // Generate grid road network
-    for (let i = 0; i < mainRoads.length; i++) {
-        let func = grid.getOutcome();
-        if (func) {
-            func(mainRoads[i]);
-        }
-    }
+    rgen.setWaterLevel(controls.waterLevel);
+    rgen.generateRoads();
+    let mroads = rgen.getMainRoads();
+    let sroads = rgen.getSmallRoads();
     // Convert edges to render data
-    for (let i = 0; i < mainRoads.length; i++) {
-        renderEdge(mainRoads[i]);
+    for (let i = 0; i < sroads.length; i++) {
+        renderEdge(sroads[i]);
     }
-    for (let i = 0; i < smallRoads.length; i++) {
-        renderEdge(smallRoads[i]);
+    for (let i = 0; i < mroads.length; i++) {
+        renderEdge(mroads[i]);
     }
     square.setInstanceVBOs(new Float32Array(roadTCol1Array), new Float32Array(roadTCol2Array), new Float32Array(roadTCol3Array), new Float32Array(roadColorsArray));
-    square.setNumInstances(mainRoads.length + smallRoads.length);
+    square.setNumInstances(mroads.length + sroads.length);
+    let circleTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let circleScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let circleTranslateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(circleScaleMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(3, 3));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(circleTranslateMat, rgen.startPos);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(circleTransform, circleTranslateMat, circleScaleMat);
+    let circleCol1Array = [], circleCol2Array = [], circleCol3Array = [];
+    for (let j = 0; j < 3; j++) {
+        circleCol1Array.push(circleTransform[j]);
+        circleCol2Array.push(circleTransform[3 + j]);
+        circleCol3Array.push(circleTransform[6 + j]);
+    }
+    circle.setInstanceVBOs(new Float32Array(circleCol1Array), new Float32Array(circleCol2Array), new Float32Array(circleCol3Array), new Float32Array([1.0, 0.0, 0.0, 1.0]));
+    circle.setNumInstances(1);
 }
 function main() {
     // Initial display for framerate
@@ -6549,8 +6141,8 @@ function main() {
     gui.add(controls, 'displayElevation');
     gui.add(controls, 'displayPopDensity');
     gui.add(controls, 'waterLevel', 0, 2.5).step(0.2);
+    gui.add(controls, 'branchThreshold', 15, 60).step(5);
     gui.add(controls, 'maxHighwayLength', 50, 400).step(25);
-    gui.add(controls, 'maxHighwayAngle', 15, 75).step(5);
     gui.add(controls, 'Generate');
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
@@ -6560,39 +6152,93 @@ function main() {
     }
     // `setGL` is a function imported above which sets the value of `gl` in the `globals.ts` module.
     // Later, we can import `gl` from `globals.ts` to access it
-    Object(__WEBPACK_IMPORTED_MODULE_11__globals__["b" /* setGL */])(gl);
+    Object(__WEBPACK_IMPORTED_MODULE_8__globals__["b" /* setGL */])(gl);
     // Create meshes
     createMeshes();
-    // Initial call to load scene
-    loadScene();
-    const camera = new __WEBPACK_IMPORTED_MODULE_6__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 10), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 0));
-    const renderer = new __WEBPACK_IMPORTED_MODULE_5__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
+    const camera = new __WEBPACK_IMPORTED_MODULE_7__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 10), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 0));
+    const renderer = new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
     renderer.setClearColor(0.2, 0.2, 0.2, 1);
     // Calculate projection matrix
-    let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(transform, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(-1, -1));
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(scale, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(2 / cw, 2 / ch));
+    let translate = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(translate, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(-1, -1));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(scale, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(2 / (Math.floor(aspectRatio * cityHeight)), 2 / cityHeight));
     let proj2D = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(proj2D, transform, scale);
-    const instancedShader = new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(73)),
-        new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(74)),
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(proj2D, translate, scale);
+    // Create shaders
+    const instancedShader = new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(74)),
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(75)),
     ]);
-    const flat = new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(75)),
-        new __WEBPACK_IMPORTED_MODULE_12__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(76)),
+    const flat = new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(76)),
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(77)),
     ]);
+    const data = new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(78)),
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(79)),
+    ]);
+    // Create and bind the texture
+    const t_width = window.innerWidth;
+    const t_height = window.innerHeight;
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t_width, t_height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    // Set texture's render settings
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // Create and bind the frame buffer
+    var texture_fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, texture_fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    // Create and bind the render buffer
+    var texture_rb = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, texture_rb);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, t_width, t_height);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, texture_rb);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+        console.log("error");
+    }
+    // Render data first
+    gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    camera.update();
+    renderer.render(camera, data, [screenQuad], proj2D, false, false, controls.waterLevel);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, texture_fb);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    let pixelData = new Uint8Array(t_width * t_height * 4);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
+        gl.readPixels(0, 0, t_width, t_height, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
+    }
+    // Calculate grid based on window dimensions
+    let cityDimensions = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.floor(aspectRatio * cityHeight), cityHeight), gridDimensions = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.floor(aspectRatio * gridHeight), gridHeight);
+    rgen = new __WEBPACK_IMPORTED_MODULE_10__road_RoadGenerator__["a" /* default */](cityDimensions, gridDimensions);
+    rgen.setWaterLevel(controls.waterLevel);
+    rgen.setData(pixelData, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t_width, t_height));
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Initial call to load scene
+    //loadScene();
     // This function will be called every frame
     function tick() {
         camera.update();
         stats.begin();
         instancedShader.setTime(time);
-        flat.setTime(time++);
+        data.setTime(time++);
+        // Clear frame buffer (render to canvas)
+        //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.clear();
         renderer.render(camera, flat, [screenQuad], proj2D, controls.displayElevation, controls.displayPopDensity, controls.waterLevel);
         renderer.render(camera, instancedShader, [
-            square,
+            square
+        ], proj2D, false, false, 0);
+        renderer.render(camera, instancedShader, [
+            circle
         ], proj2D, false, false, 0);
         stats.end();
         // Tell the browser to call `tick` again whenever it renders a new frame
@@ -6602,12 +6248,12 @@ function main() {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.setAspectRatio(window.innerWidth / window.innerHeight);
         camera.updateProjectionMatrix();
-        flat.setDimensions(window.innerWidth, window.innerHeight);
+        data.setDimensions(window.innerWidth, window.innerHeight);
     }, false);
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
-    flat.setDimensions(window.innerWidth, window.innerHeight);
+    data.setDimensions(window.innerWidth, window.innerHeight);
     // Start the render loop
     tick();
 }
@@ -7642,8 +7288,8 @@ var sub = subtract;
 /* unused harmony export exactEquals */
 /* unused harmony export equals */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_js__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__quat_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mat4_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__quat_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mat4_js__ = __webpack_require__(7);
 
 
 
@@ -13610,7 +13256,7 @@ dat.utils.common);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
@@ -13662,7 +13308,7 @@ class Square extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /*
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
@@ -13677,6 +13323,10 @@ class ScreenQuad extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a
             1, -1, 0.999, 1,
             1, 1, 0.999, 1,
             -1, 1, 0.999, 1]);
+        /*this.uvs = new Float32Array([-1, -1,
+                                     -1, 1,
+                                      1, 1,
+                                      1, -1]);*/
         this.generateIdx();
         this.generatePos();
         this.count = this.indices.length;
@@ -13694,6 +13344,72 @@ class ScreenQuad extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a
 
 /***/ }),
 /* 32 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
+
+
+
+class Circle extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* default */] {
+    constructor() {
+        super(); // Call the constructor of the super class. This is required.
+    }
+    create() {
+        let points = 15;
+        let idx = [], pos = [];
+        let twopi = 6.28318531;
+        for (let i = 0; i < points; i++) {
+            let p = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1., 0.);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].rotate(p, p, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 0), i * twopi / points);
+            pos.push(p[0]);
+            pos.push(p[1]);
+            pos.push(0);
+            pos.push(1);
+        }
+        for (let i = 1; i < points - 1; i++) {
+            idx.push(0);
+            idx.push(i);
+            idx.push(i + 1);
+        }
+        this.indices = new Uint32Array(idx);
+        this.positions = new Float32Array(pos);
+        this.generateIdx();
+        this.generatePos();
+        this.generateCol();
+        this.generateTransform1();
+        this.generateTransform2();
+        this.generateTransform3();
+        this.count = this.indices.length;
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.indices, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.positions, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        console.log(`Created circle`);
+    }
+    setInstanceVBOs(col1s, col2s, col3s, colors) {
+        this.colors = colors;
+        this.transcol1 = col1s;
+        this.transcol2 = col2s;
+        this.transcol3 = col3s;
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufCol);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.colors, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform1);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.transcol1, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform2);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.transcol2, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufTransform3);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.transcol3, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+    }
+}
+;
+/* harmony default export */ __webpack_exports__["a"] = (Circle);
+
+
+/***/ }),
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13752,12 +13468,12 @@ class OpenGLRenderer {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
-var CameraControls = __webpack_require__(34);
+var CameraControls = __webpack_require__(35);
 
 class Camera {
     constructor(position, target) {
@@ -13815,7 +13531,7 @@ class Camera {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13823,12 +13539,12 @@ class Camera {
 
 module.exports = createCamera
 
-var now         = __webpack_require__(35)
-var createView  = __webpack_require__(37)
-var mouseChange = __webpack_require__(60)
-var mouseWheel  = __webpack_require__(62)
-var mouseOffset = __webpack_require__(65)
-var hasPassive  = __webpack_require__(66)
+var now         = __webpack_require__(36)
+var createView  = __webpack_require__(38)
+var mouseChange = __webpack_require__(61)
+var mouseWheel  = __webpack_require__(63)
+var mouseOffset = __webpack_require__(66)
+var hasPassive  = __webpack_require__(67)
 
 function createCamera(element, options) {
   element = element || document.body
@@ -14058,7 +13774,7 @@ function createCamera(element, options) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {module.exports =
@@ -14069,10 +13785,10 @@ function createCamera(element, options) {
     return +new Date
   }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(36)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(37)))
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 var g;
@@ -14099,7 +13815,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14107,9 +13823,9 @@ module.exports = g;
 
 module.exports = createViewController
 
-var createTurntable = __webpack_require__(38)
-var createOrbit     = __webpack_require__(41)
-var createMatrix    = __webpack_require__(44)
+var createTurntable = __webpack_require__(39)
+var createOrbit     = __webpack_require__(42)
+var createMatrix    = __webpack_require__(45)
 
 function ViewController(controllers, mode) {
   this._controllerNames = Object.keys(controllers)
@@ -14227,7 +13943,7 @@ function createViewController(options) {
 }
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14237,9 +13953,9 @@ module.exports = createTurntableController
 
 var filterVector = __webpack_require__(11)
 var invert44     = __webpack_require__(3)
-var rotateM      = __webpack_require__(40)
+var rotateM      = __webpack_require__(41)
 var cross        = __webpack_require__(13)
-var normalize3   = __webpack_require__(4)
+var normalize3   = __webpack_require__(5)
 var dot3         = __webpack_require__(14)
 
 function len3(x, y, z) {
@@ -14805,7 +14521,7 @@ function createTurntableController(options) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14850,7 +14566,7 @@ module.exports = cubicHermite
 module.exports.derivative = dcubicHermite
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 module.exports = rotate;
@@ -14919,7 +14635,7 @@ function rotate(out, a, rad, axis) {
 };
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14929,9 +14645,9 @@ module.exports = createOrbitController
 
 var filterVector  = __webpack_require__(11)
 var lookAt        = __webpack_require__(15)
-var mat4FromQuat  = __webpack_require__(42)
+var mat4FromQuat  = __webpack_require__(43)
 var invert44      = __webpack_require__(3)
-var quatFromFrame = __webpack_require__(43)
+var quatFromFrame = __webpack_require__(44)
 
 function len3(x,y,z) {
   return Math.sqrt(Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2))
@@ -15318,7 +15034,7 @@ function createOrbitController(options) {
 }
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports) {
 
 module.exports = fromQuat;
@@ -15370,7 +15086,7 @@ function fromQuat(out, q) {
 };
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15417,22 +15133,22 @@ function quatFromFrame(
 }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var bsearch   = __webpack_require__(12)
-var m4interp  = __webpack_require__(45)
+var m4interp  = __webpack_require__(46)
 var invert44  = __webpack_require__(3)
-var rotateX   = __webpack_require__(57)
-var rotateY   = __webpack_require__(58)
-var rotateZ   = __webpack_require__(59)
+var rotateX   = __webpack_require__(58)
+var rotateY   = __webpack_require__(59)
+var rotateZ   = __webpack_require__(60)
 var lookAt    = __webpack_require__(15)
 var translate = __webpack_require__(17)
 var scale     = __webpack_require__(19)
-var normalize = __webpack_require__(4)
+var normalize = __webpack_require__(5)
 
 var DEFAULT_CENTER = [0,0,0]
 
@@ -15622,15 +15338,15 @@ function createMatrixCameraController(options) {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var lerp = __webpack_require__(46)
+var lerp = __webpack_require__(47)
 
-var recompose = __webpack_require__(47)
-var decompose = __webpack_require__(50)
+var recompose = __webpack_require__(48)
+var decompose = __webpack_require__(51)
 var determinant = __webpack_require__(20)
-var slerp = __webpack_require__(55)
+var slerp = __webpack_require__(56)
 
 var state0 = state()
 var state1 = state()
@@ -15679,7 +15395,7 @@ function vec4() {
 }
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports) {
 
 module.exports = lerp;
@@ -15704,7 +15420,7 @@ function lerp(out, a, b, t) {
 }
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -15721,10 +15437,10 @@ From: http://www.w3.org/TR/css3-transforms/#recomposing-to-a-3d-matrix
 var mat4 = {
     identity: __webpack_require__(16),
     translate: __webpack_require__(17),
-    multiply: __webpack_require__(48),
+    multiply: __webpack_require__(49),
     create: __webpack_require__(18),
     scale: __webpack_require__(19),
-    fromRotationTranslation: __webpack_require__(49)
+    fromRotationTranslation: __webpack_require__(50)
 }
 
 var rotationMatrix = mat4.create()
@@ -15769,7 +15485,7 @@ module.exports = function recomposeMat4(matrix, translation, scale, skew, perspe
 }
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports) {
 
 module.exports = multiply;
@@ -15816,7 +15532,7 @@ function multiply(out, a, b) {
 };
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports) {
 
 module.exports = fromRotationTranslation;
@@ -15874,7 +15590,7 @@ function fromRotationTranslation(out, q, v) {
 };
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*jshint unused:true*/
@@ -15894,16 +15610,16 @@ https://github.com/ChromiumWebApps/chromium/blob/master/ui/gfx/transform_util.cc
 http://www.w3.org/TR/css3-transforms/#decomposing-a-3d-matrix
 */
 
-var normalize = __webpack_require__(51)
+var normalize = __webpack_require__(52)
 
 var create = __webpack_require__(18)
-var clone = __webpack_require__(52)
+var clone = __webpack_require__(53)
 var determinant = __webpack_require__(20)
 var invert = __webpack_require__(3)
-var transpose = __webpack_require__(53)
+var transpose = __webpack_require__(54)
 var vec3 = {
-    length: __webpack_require__(54),
-    normalize: __webpack_require__(4),
+    length: __webpack_require__(55),
+    normalize: __webpack_require__(5),
     dot: __webpack_require__(14),
     cross: __webpack_require__(13)
 }
@@ -16058,7 +15774,7 @@ function combine(out, a, b, scale1, scale2) {
 }
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports) {
 
 module.exports = function normalize(out, mat) {
@@ -16073,7 +15789,7 @@ module.exports = function normalize(out, mat) {
 }
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports) {
 
 module.exports = clone;
@@ -16106,7 +15822,7 @@ function clone(a) {
 };
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports) {
 
 module.exports = transpose;
@@ -16160,7 +15876,7 @@ function transpose(out, a) {
 };
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports) {
 
 module.exports = length;
@@ -16179,13 +15895,13 @@ function length(a) {
 }
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(56)
+module.exports = __webpack_require__(57)
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports) {
 
 module.exports = slerp
@@ -16242,7 +15958,7 @@ function slerp (out, a, b, t) {
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports) {
 
 module.exports = rotateX;
@@ -16291,7 +16007,7 @@ function rotateX(out, a, rad) {
 };
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports) {
 
 module.exports = rotateY;
@@ -16340,7 +16056,7 @@ function rotateY(out, a, rad) {
 };
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports) {
 
 module.exports = rotateZ;
@@ -16389,7 +16105,7 @@ function rotateZ(out, a, rad) {
 };
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16397,7 +16113,7 @@ function rotateZ(out, a, rad) {
 
 module.exports = mouseListen
 
-var mouse = __webpack_require__(61)
+var mouse = __webpack_require__(62)
 
 function mouseListen (element, callback) {
   if (!callback) {
@@ -16601,7 +16317,7 @@ function mouseListen (element, callback) {
 
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16668,13 +16384,13 @@ exports.y = mouseRelativeY
 
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var toPX = __webpack_require__(63)
+var toPX = __webpack_require__(64)
 
 module.exports = mouseWheelListen
 
@@ -16715,13 +16431,13 @@ function mouseWheelListen(element, callback, noScroll) {
 
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var parseUnit = __webpack_require__(64)
+var parseUnit = __webpack_require__(65)
 
 module.exports = toPX
 
@@ -16796,7 +16512,7 @@ function toPX(str, element) {
 
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports) {
 
 module.exports = function parseUnit(str, out) {
@@ -16811,7 +16527,7 @@ module.exports = function parseUnit(str, out) {
 }
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports) {
 
 var rootPosition = { left: 0, top: 0 }
@@ -16842,13 +16558,13 @@ function getBoundingClientOffset (element) {
 
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isBrowser = __webpack_require__(67)
+var isBrowser = __webpack_require__(68)
 
 function detect() {
 	var supported = false
@@ -16873,180 +16589,13 @@ module.exports = isBrowser && detect()
 
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports) {
 
 module.exports = true;
 
 /***/ }),
-/* 68 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
-
-class Turtle {
-    constructor(pos, orient, dep) {
-        this.position = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        this.orientation = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        this.depth = 0;
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.orientation, orient);
-        this.depth = dep;
-    }
-    moveForward(amt) {
-        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(temp, this.orientation, amt);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(this.position, this.position, temp);
-    }
-    rotate(deg) {
-        let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].rotate(transform, transform, deg * 0.01745329251);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].transformMat3(this.orientation, this.orientation, transform);
-    }
-}
-/* harmony default export */ __webpack_exports__["a"] = (Turtle);
-
-
-/***/ }),
 /* 69 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-class DrawingRule {
-    constructor() {
-        this.outcomes = [];
-    }
-    addOutcome(func, probability) {
-        this.outcomes.push([func, probability]);
-    }
-    getOutcome() {
-        let n = Math.random();
-        let cumulativeProbability = 0.0;
-        for (let i = 0; i < this.outcomes.length; i++) {
-            cumulativeProbability += this.outcomes[i][1];
-            if (n <= cumulativeProbability) {
-                return this.outcomes[i][0];
-            }
-        }
-        return;
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = DrawingRule;
-
-
-
-/***/ }),
-/* 70 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
-
-class Node {
-    constructor(pos, i) {
-        this.position = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
-        this.x = this.position[0];
-        this.y = this.position[1];
-        this.id = i;
-    }
-    distanceFrom(pos) {
-        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.position, pos);
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Node;
-
-
-
-/***/ }),
-/* 71 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
-
-class Edge {
-    constructor(end1, end2, i, h) {
-        this.endpoint1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        this.endpoint2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint1, end1);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint2, end2);
-        this.id = i;
-        this.highway = h;
-    }
-    getLength() {
-        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint1, this.endpoint2);
-    }
-    getMidpoint() {
-        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, this.endpoint1, this.endpoint2);
-        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(temp[0] / 2, temp[1] / 2);
-    }
-    getClosestEndpoint(pos) {
-        let dist1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint1, pos);
-        let dist2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint2, pos);
-        if (dist1 <= dist2) {
-            return this.endpoint1;
-        }
-        return this.endpoint2;
-    }
-    // Get the direction vector going from point 1 to point 2
-    getDirectionVector() {
-        let dir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(dir, this.endpoint2, this.endpoint1);
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(dir, dir);
-        return dir;
-    }
-    intersectionEdge(e) {
-        // Suppose this edge is defined as x0(t) = u0 + tv0,
-        // and the given edge is defined   x1(t) = u1 + tv1,
-        // where t exists in the interval [0, 1].
-        // u0 = this.endpoint1, v0 = this.endpoint2 - this.endpoint1
-        // u1 = e.endpoint1,    v1 = e.endpoint2 - e.endpoint2
-        let v0 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.endpoint2[0] - this.endpoint1[0], this.endpoint2[1] - this.endpoint1[1]);
-        let v1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.endpoint2[0] - e.endpoint1[0], e.endpoint2[1] - e.endpoint1[1]);
-        let x00 = this.endpoint1[0], y00 = this.endpoint1[1], x01 = v0[0], y01 = v0[1], x10 = e.endpoint1[0], y10 = e.endpoint1[1], x11 = v1[0], y11 = v1[1];
-        if (x00 - x10 == 0 && y00 - y10 == 0) {
-            return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.endpoint1[0], this.endpoint1[1]);
-        }
-        let determinant = e.endpoint2[0] * this.endpoint2[1] - this.endpoint2[0] * e.endpoint2[1];
-        // We're going to handle parallel lines specially, because if two edges overlap in this way we'll
-        // stil want a valid intersection returned
-        if (determinant == 0) {
-            return undefined;
-        }
-        let s = ((x00 - x10) * y01 - (y00 - y10) * x01) / determinant;
-        if (s < 0 || s > 1) {
-            return undefined;
-        }
-        let t = -((x10 - x00) * y11 + (y00 - y10) * x11) / determinant;
-        if (t < 0 || t > 1) {
-            return undefined;
-        }
-        let point = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(point, this.endpoint1, this.endpoint2, t);
-        return point;
-    }
-    intersectionSegment(p1, p2) {
-        return this.intersectionEdge(new Edge(p1, p2, -1, false));
-    }
-    // First parameter is bottom left corner,
-    // second parameter is top right corner.
-    intersectQuad(corner1, corner2) {
-        let top = this.intersectionSegment(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(corner1[0], corner2[1]), corner2);
-        let left = this.intersectionSegment(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(corner1[0], corner2[1]), corner1);
-        let bottom = this.intersectionSegment(corner1, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(corner2[0], corner1[1]));
-        let right = this.intersectionSegment(corner2, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(corner2[0], corner1[1]));
-        return top != undefined || left != undefined || bottom != undefined || right != undefined;
-    }
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Edge;
-
-
-
-/***/ }),
-/* 72 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -17084,7 +16633,7 @@ class ShaderProgram {
         this.attrTransform1 = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getAttribLocation(this.prog, "vs_Transform1");
         this.attrTransform2 = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getAttribLocation(this.prog, "vs_Transform2");
         this.attrTransform3 = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getAttribLocation(this.prog, "vs_Transform3");
-        this.attrUV = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getAttribLocation(this.prog, "vs_UV");
+        //this.attrUV         = gl.getAttribLocation(this.prog, "vs_UV");
         this.unifModel = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_Model");
         this.unifModelInvTr = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_ModelInvTr");
         this.unifViewProj = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_ViewProj");
@@ -17208,11 +16757,13 @@ class ShaderProgram {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrTransform3, 3, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0);
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribDivisor(this.attrTransform3, 1); // Advance 1 index in translate VBO for each drawn instance
         }
+        /*
         if (this.attrUV != -1 && d.bindUV()) {
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].enableVertexAttribArray(this.attrUV);
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrUV, 2, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0);
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
+          gl.enableVertexAttribArray(this.attrUV);
+          gl.vertexAttribPointer(this.attrUV, 2, gl.FLOAT, false, 0, 0);
+          gl.vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
         }
+        */
         // TODO: Set up attribute data for additional instanced rendering data as needed
         d.bindIdx();
         // drawElementsInstanced uses the vertexAttribDivisor for each "in" variable to
@@ -17239,8 +16790,7 @@ class ShaderProgram {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].disableVertexAttribArray(this.attrTransform2);
         if (this.attrTransform3 != -1)
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].disableVertexAttribArray(this.attrTransform3);
-        if (this.attrUV != -1)
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].disableVertexAttribArray(this.attrUV);
+        //if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
     }
 }
 ;
@@ -17248,28 +16798,784 @@ class ShaderProgram {
 
 
 /***/ }),
-/* 73 */
-/***/ (function(module, exports) {
+/* 70 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = "#version 300 es\r\n\r\nuniform mat4 u_ViewProj;\r\nuniform float u_Time;\r\nuniform mat3 u_2DProj;\r\n\r\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\r\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\r\n\r\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\r\nin vec4 vs_Nor; // Non-instanced, and presently unused\r\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\r\nin vec3 vs_Transform1; // Another instance rendering attribute; column 1 of transform matrix\r\nin vec3 vs_Transform2; // Another instance rendering attribute; column 2 of transform matrix\r\nin vec3 vs_Transform3; // Another instance rendering attribute; column 3 of transform matrix\r\nin vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.\r\n\r\nout vec4 fs_Col;\r\n\r\nvoid main()\r\n{\t\r\n    mat3 transform = mat3(vs_Transform1, vs_Transform2, vs_Transform3);\r\n    vec3 pos = vec3(vs_Pos.x, vs_Pos.y, vs_Pos.w);\r\n    vec3 res = u_2DProj * transform * pos;\r\n    gl_Position = vec4(res.x, res.y, 0., 1.);\r\n\r\n    fs_Col = vs_Col;\r\n}\r\n"
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Edge__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Node__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Turtle__ = __webpack_require__(73);
+
+
+
+
+class RoadGenerator {
+    constructor(cs, gs) {
+        this.startPosLocked = false;
+        // Highway variables
+        this.searchRadius = 300;
+        this.searchAngle = 90;
+        this.searchSteps = 5;
+        this.branchThreshold = 30;
+        this.hSegLengthMax = 100;
+        this.hSegLengthMin = 30;
+        this.branchFreq = -3;
+        this.maxBlocks = 20;
+        this.globalDirection = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1.0, 0);
+        this.nodeEpsilon = 0.1;
+        this.nCounter = 0;
+        this.eCounter = 0;
+        this.citySize = cs;
+        this.gridSize = gs;
+    }
+    setData(d, ds) {
+        this.data = d;
+        this.dataSize = ds;
+        this.reset();
+    }
+    setStartPos(sp, lock) {
+        this.startPos = sp;
+        this.startPosLocked = lock;
+    }
+    // Gets the green component of the image
+    getElevation(point) {
+        let texPoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        texPoint[0] = point[0] / this.citySize[0];
+        texPoint[1] = point[1] / this.citySize[1];
+        texPoint[0] = Math.floor(texPoint[0] * this.dataSize[0]);
+        texPoint[1] = Math.floor(texPoint[1] * this.dataSize[1]);
+        return this.data[4.0 * (texPoint[0] + this.dataSize[0] * texPoint[1]) + 1.0];
+    }
+    getPopulation(point) {
+        let texPoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        texPoint[0] = point[0] / this.citySize[0];
+        texPoint[1] = point[1] / this.citySize[1];
+        texPoint[0] = Math.floor(texPoint[0] * this.dataSize[0]);
+        texPoint[1] = Math.floor(texPoint[1] * this.dataSize[1]);
+        return this.data[4.0 * (texPoint[0] + this.dataSize[0] * texPoint[1])];
+    }
+    setWaterLevel(level) {
+        this.waterLevel = level * 255 / 5;
+    }
+    reset() {
+        this.cellWidth = this.citySize[0] / this.gridSize[0];
+        this.ncells = [];
+        this.ecells = [];
+        for (let i = 0; i < this.gridSize[0] * this.gridSize[1]; i++) {
+            this.ncells.push([]);
+            this.ecells.push([]);
+        }
+        this.mainRoads = [];
+        this.smallRoads = [];
+        this.turtles = [];
+        this.turtlesToAdd = [];
+        this.highwayTurtles = [];
+        // bias it properly
+        if (!this.startPosLocked) {
+            do {
+                let xValue = Math.random() * 0.1 * this.citySize[0], yValue = Math.random() * 0.1 * this.citySize[1];
+                if (Math.random() <= 0.5) {
+                    xValue += 0.9 * this.citySize[0];
+                }
+                if (Math.random() <= 0.5) {
+                    yValue += 0.9 * this.citySize[1];
+                }
+                this.startPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(xValue, yValue);
+            } while (this.getElevation(this.startPos) <= this.waterLevel);
+            console.log(this.startPos);
+        }
+        // Based on the random position, attempt to make the Turtle face the direction with the most
+        // promising population density
+        let rotation = 0;
+        let maxWeight = -1;
+        for (let i = -120; i <= 120; i += 30) {
+            let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](this.startPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, 0), 0);
+            tempTurtle.rotate(i);
+            let weight = 0;
+            tempTurtle.moveForward(this.cellWidth);
+            if (this.getElevation(tempTurtle.position) > this.waterLevel) {
+                weight = this.getPopulation(tempTurtle.position);
+            }
+            if (weight > maxWeight) {
+                rotation = i;
+                maxWeight = weight;
+            }
+        }
+        let t = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](this.startPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.cos(rotation), Math.sin(rotation)), -1);
+        this.turtles.push(t);
+        this.highwayTurtles.push(t);
+    }
+    // Given height and population data, generate a substantial set of roads that covers it
+    generateRoads() {
+        let maxIterations = 5;
+        //this.mainRoads.push(new Edge(vec.fromValues(0, 0), citySize, 0, true));
+        //this.branchGrid(this.mainRoads[0]);
+        for (let j = 0; j < maxIterations && this.turtles.length > 0; j++) {
+            // console.log(this.turtles.length);
+            for (let i = 0; i < this.turtles.length; i++) {
+                this.branchRoad(this.turtles[i]);
+            }
+            let activeTurtles = [];
+            for (let i = 0; i < this.turtles.length; i++) {
+                if (this.drawRoad(this.turtles[i])) {
+                    activeTurtles.push(this.turtles[i]);
+                }
+            }
+            this.turtles = activeTurtles;
+            this.turtles = this.turtles.concat(this.turtlesToAdd);
+            this.turtlesToAdd = [];
+        }
+        console.log("done!");
+    }
+    getMainRoads() {
+        return this.mainRoads;
+    }
+    getSmallRoads() {
+        return this.smallRoads;
+    }
+    //////////////////////////////////////
+    // GENERAL HELPER FUNCTIONS
+    //////////////////////////////////////
+    outOfBounds(pos) {
+        return pos[0] < 0 || pos[0] > this.citySize[0] || pos[1] < 0 || pos[1] > this.citySize[1];
+    }
+    // manages equality with a larger epsilon
+    vec2Equality(v1, v2) {
+        return Math.abs(v1[0] - v2[0]) < this.nodeEpsilon
+            && Math.abs(v1[1] - v2[1]) < this.nodeEpsilon;
+    }
+    //////////////////////////////////////
+    // CELL MANAGEMENT HELPER FUNCTIONS
+    //////////////////////////////////////
+    getPosRowNumber(p) {
+        return Math.floor(p[1] / this.cellWidth);
+    }
+    getPosColNumber(p) {
+        return Math.floor(p[0] / this.cellWidth);
+    }
+    getPosCellNumber(p) {
+        let cellx = Math.floor(p[0] / this.cellWidth), celly = Math.floor(p[1] / this.cellWidth);
+        let celln = Math.floor(this.gridSize[0] * celly + cellx);
+        if (celln < 0 || celln >= this.gridSize[0] * this.gridSize[1]) {
+            return undefined;
+        }
+        return celln;
+    }
+    // Given a vec2 position, see if there is an existing
+    // node that marks that position.
+    getNodeAtPos(pos) {
+        if (this.outOfBounds(pos)) {
+            return undefined;
+        }
+        let nArray = this.ncells[this.getPosCellNumber(pos)];
+        if (nArray == undefined) {
+            return undefined;
+        }
+        for (let i = 0; i < nArray.length; i++) {
+            if (this.vec2Equality(nArray[i].getPosition(), pos)) {
+                return nArray[i];
+            }
+        }
+        return undefined;
+    }
+    // Given an edge, find all of the cells that it intersects
+    getEdgeCells(e) {
+        let ret = [];
+        let leftBound = this.getPosColNumber(e.endpoint1);
+        let rightBound = this.getPosColNumber(e.endpoint2);
+        let bottomBound = this.getPosRowNumber(e.endpoint1);
+        let topBound = this.getPosRowNumber(e.endpoint2);
+        if (leftBound > rightBound) {
+            rightBound = leftBound;
+            leftBound = this.getPosColNumber(e.endpoint2);
+        }
+        if (bottomBound > topBound) {
+            topBound = bottomBound;
+            bottomBound = this.getPosRowNumber(e.endpoint2);
+        }
+        rightBound = Math.min(rightBound, this.gridSize[0]);
+        topBound = Math.min(topBound, this.gridSize[1]);
+        for (let j = bottomBound; j <= topBound; j++) {
+            for (let i = leftBound; i <= rightBound; i++) {
+                let cellNumber = this.gridSize[0] * j + i;
+                if (cellNumber < 0 || cellNumber >= this.gridSize[0] * this.gridSize[1]) {
+                    continue; // cell out of bounds
+                }
+                if (e.intersectQuad(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(i * this.cellWidth, j * this.cellWidth), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues((i + 1) * this.cellWidth, (j + 1) * this.cellWidth))) {
+                    ret.push(cellNumber);
+                }
+            }
+        }
+        return ret;
+    }
+    // Given a node, sort it into the cell map as long as there
+    // isn't another existing node at that position. If the node
+    // is unable to be fit, return false
+    sortNode(n) {
+        if (this.outOfBounds(n.getPosition())) {
+            return false;
+        }
+        let array = this.ncells[this.getPosCellNumber(n.getPosition())];
+        for (let i = 0; i < array.length; i++) {
+            if (n.equals(array[i], this.nodeEpsilon)) {
+                return false;
+            }
+        }
+        array.push(n);
+        return true;
+    }
+    // Given an edge, sort it into the cell map, i.e. find all of the cells
+    // that it overlaps and store it in those cells' datasets.
+    sortEdge(e) {
+        let cells = this.getEdgeCells(e);
+        if (cells == undefined || cells.length == 0) {
+            return false;
+        }
+        for (let i = 0; i < cells.length; i++) {
+            this.ecells[cells[i]].push(e);
+        }
+        return true;
+    }
+    willIntersect(t1, t2) {
+        let p = t1.position;
+        let r = t1.orientation;
+        let q = t2.position;
+        let s = t2.orientation;
+        let qp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(qp, q, p);
+        let qpxr = qp[0] * r[1] - qp[1] * r[0];
+        let qpxs = qp[0] * s[1] - qp[1] * s[0];
+        let rxs = r[0] * s[1] - r[1] * s[0];
+        if (Math.abs(rxs) < 0.01) {
+            return false;
+        }
+        let u = qpxr / rxs;
+        let t = qpxs / rxs;
+        return u >= 0 && t >= 0;
+    }
+    //////////////////////////////////////
+    // ROAD DRAWING & FUNCTIONS
+    //////////////////////////////////////
+    branchRoad(t) {
+        if (t.depth < 0) {
+            this.branchHighway(t, this.searchAngle, this.searchRadius);
+        }
+    }
+    // store the distance travelled in the turtle.
+    // Rotates the turtle such that it will draw in the direction of the most
+    // highly weighted direction above a certain threshold, while generating
+    // a new Turtle if 1. turtle rotates enough off its original course and
+    // 2. the population of the original direction is high enough
+    // Branches the highways if the turtle has travelled more than the radius.
+    // THEN ATTEMPT TO IMPLEMENT INTERSECTION DETECTION
+    branchHighway(t, angle, radius) {
+        // let rotateCurrent: boolean = true;
+        /*
+            let previousRotation : number = 0;
+            for(let i = 0; i < t.angleHistory.length; i++) {
+              previousRotation += t.angleHistory[i];
+            }
+        
+            if(Math.abs(previousRotation) > 120) {
+              rotateCurrent = false;
+            }*/
+        let rotation = -360;
+        let secondRotation = -360;
+        let maxWeight = -1;
+        let secondMaxWeight = -1;
+        for (let i = -angle / 2; i <= angle / 2; i += angle / 6) {
+            let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](t.position, t.orientation, -1);
+            tempTurtle.rotate(i);
+            let weight = 0;
+            for (let j = 0; j < this.searchSteps; j++) {
+                tempTurtle.moveForward(radius / this.searchSteps);
+                if (this.getElevation(tempTurtle.position) > this.waterLevel) {
+                    weight += this.getPopulation(tempTurtle.position)
+                        / __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(tempTurtle.position, t.position);
+                }
+            }
+            if (weight > maxWeight) {
+                secondRotation = rotation;
+                secondMaxWeight = maxWeight;
+                rotation = i;
+                maxWeight = weight;
+            }
+            else if (weight > secondMaxWeight) {
+                secondRotation = i;
+                secondMaxWeight = weight;
+            }
+        }
+        /*
+            // scan for nearby turtles
+            for(let i = 0; i < this.highwayTurtles.length; i++) {
+              if(!this.vec2Equality(t.position, this.highwayTurtles[i].position) &&
+                  vec2.distance(t.position, this.highwayTurtles[i].position) <= this.searchRadius) {
+                // check if their current trajectories are going to intersect
+                if(this.willIntersect(t, this.highwayTurtles[i])) {
+                  this.highwayTurtles[i]
+                }
+              }
+            }*/
+        console.log(this.turtlesToAdd.length);
+        let nt = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](t.position, t.orientation, -1);
+        if (Math.abs(rotation) > this.branchThreshold) {
+            this.turtlesToAdd.push(nt);
+        }
+        else if (Math.abs(rotation - secondRotation) > this.branchThreshold * 1.5) {
+            nt.rotate(secondRotation);
+            this.turtlesToAdd.push(nt);
+        }
+        console.log(this.turtlesToAdd.length);
+        t.rotate(rotation);
+    }
+    branchGrid(e) {
+        // We use the Turtle "depth" to store numbers 
+        let minLength = 10;
+        let stepLength = Math.max(minLength, e.getLength() / this.maxBlocks);
+        let maxSteps = Math.floor(e.getLength() / stepLength);
+        let dir = e.getDirectionVector();
+        let perpLocal = dir[1] != 0 ? __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, -dir[0] / dir[1])
+            : __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 1);
+        let perpGlobal = this.globalDirection[1] != 0
+            ? __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, -this.globalDirection[0] / this.globalDirection[1])
+            : __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 1);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpLocal, perpLocal);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpGlobal, perpGlobal);
+        let anglePerp = Math.acos(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(perpLocal, this.globalDirection) /
+            (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(perpLocal) * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(this.globalDirection)));
+        let angleRoadDir = Math.acos(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(dir, this.globalDirection) /
+            (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(dir) * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(this.globalDirection)));
+        // change direction depending on which (if any)
+        // of the two directions are closest to direction vector
+        let gridDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        let gridPerpDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        if (anglePerp * 57.2957795 < 15) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridDir, this.globalDirection);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridPerpDir, perpGlobal);
+        }
+        else if (angleRoadDir * 57.2957795 < 15) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridDir, perpGlobal);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridPerpDir, this.globalDirection);
+        }
+        else {
+            gridDir = perpLocal;
+            gridPerpDir = dir;
+        }
+        // This turtle marches along the existing highway to spawn grid turtles along the sides
+        let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](e.endpoint1, dir, 0);
+        for (let i = 0; i <= maxSteps; i++) {
+            tempTurtle.moveForward(stepLength);
+            let t = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](tempTurtle.position, gridDir, 0);
+            t.stepLength = stepLength;
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(t.stepDir, gridPerpDir);
+            this.turtlesToAdd.push(t);
+        }
+    }
+    drawRoad(t) {
+        if (t.depth < 0) {
+            return this.drawHighway(t);
+        }
+        return this.drawGrid(t);
+    }
+    drawHighway(t) {
+        let oldPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]);
+        t.moveForward(this.hSegLengthMin);
+        let endpoint = new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter);
+        let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, true);
+        if (!this.fixForConstraints(road)) {
+            return false;
+        }
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(t.position, road.endpoint2);
+        this.nCounter++;
+        this.eCounter++;
+        this.sortEdge(road);
+        this.sortNode(endpoint);
+        this.mainRoads.push(road);
+        //this.branchGrid(road);
+        return true;
+    }
+    drawGrid(t) {
+        if (t.depth >= this.maxBlocks) {
+            return false;
+        }
+        let upRoadDrawn = false;
+        let forwardRoadDrawn = false;
+        let oldPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]);
+        let oldOri = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.orientation[0], t.orientation[1]);
+        if (t.depth > 0) {
+            t.setOrientation(t.stepDir);
+            t.moveForward(t.stepLength);
+            let endpoint = new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter);
+            let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, false);
+            if (this.fixForConstraints(road)) {
+                this.nCounter++;
+                this.eCounter++;
+                this.sortEdge(road);
+                this.sortNode(endpoint);
+                this.smallRoads.push(road);
+                upRoadDrawn = true;
+            }
+            t.setPosition(oldPos);
+            t.setOrientation(oldOri);
+        }
+        t.moveForward(20);
+        let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, false);
+        if (this.fixForConstraints(road)) {
+            this.eCounter++;
+            this.sortEdge(road);
+            this.smallRoads.push(road);
+            forwardRoadDrawn = true;
+            t.depth++;
+        }
+        return upRoadDrawn || forwardRoadDrawn;
+    }
+    //////////////////////////////////////
+    // ROAD CONSTRAINT HELPER FUNCTIONS
+    //////////////////////////////////////
+    fixForConstraints(e) {
+        return this.fixForBounds(e); // && this.fixForWater(e);// && this.fixForNearbyRoads(e);
+    }
+    fixForBounds(e) {
+        if (this.outOfBounds(e.endpoint2)) {
+            // try to shorten
+            return false;
+        }
+        return true;
+    }
+    // Checks if the edge goes into the water and tries to adjust the endpoints'
+    // positions accordingly. If the resulting edge can fit on land or is long enough
+    // to be a worthwhile road, return true; else, return false.
+    fixForWater(e) {
+        // Test if the newest endpoint is in the water.
+        if (this.getElevation(e.endpoint2) > this.waterLevel) {
+            return true;
+        }
+        // If the road is a highway, we can try to extend it to an island within reach,
+        // as long as it is under the maximum highway length. Otherwise, we let the
+        // highway dangle, anticipating that it can be shortened back towards land.
+        if (e.highway) {
+            let increment = e.getDirectionVector();
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, (this.hSegLengthMax - e.getLength()) / 5);
+            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(increment) < this.cellWidth / 10) {
+                let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(temp, e.endpoint2);
+                for (let i = 0; i < 5; i++) {
+                    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, temp, increment);
+                    if (this.getElevation(temp) >= this.waterLevel) {
+                        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
+                        return true;
+                    }
+                }
+            }
+        }
+        // Otherwise, we slowly march the end of the edge back in the direction of the road
+        // until we either find water or reach the start point.
+        let increment = e.getDirectionVector();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, e.getLength() / 10);
+        for (let i = 0; i < 10; i++) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(e.endpoint2, e.endpoint2, increment);
+            if (this.getElevation(e.endpoint2) >= this.waterLevel) {
+                break;
+            }
+        }
+        return e.getLength() >= this.hSegLengthMin;
+    }
+    // Adjusts the road based on the surrounding road network,
+    // adds intersections where necessary. If the resulting edge is long enough
+    // to be a worthwhile road, return true; else, return false.
+    fixForNearbyRoads(e) {
+        /*
+        // Search for the closest Node; if it falls within a small radius, snap
+        // the edge to that node.
+        let endCell : number = this.getPosCellNumber(e.endpoint2);
+    
+        let closest: Node = undefined;
+        let closestDistance: number = 2 * this.length;
+    
+        if(endCell != undefined) {
+          for(let i = 0; i < this.ncells[endCell].length; i++) {
+            if(this.ncells[endCell][i].distanceFrom(e.endpoint2) < closestDistance) {
+              closest = this.ncells[endCell][i];
+            }
+          }
+    
+          if(closest != undefined && closestDistance < this.hSegLengthMin) {
+            vec2.copy(e.endpoint2, closest.getPosition());
+          }
+        }
+    
+        // Add new intersections where the edge intersects other edges;
+        // keep track of the closest one, and if it is within a reasonable
+        // threshold, snap the end of the edge to that intersection
+    
+        let interCells : Array<number> = this.getEdgeCells(e);
+        for(let i = 0; i < interCells.length; i++) {
+          for(let j = 0; j < this.ecells[i].length; j++) {
+            let inter : vec2 = e.intersectEdge(this.ecells[i][j]);
+            if(inter != undefined && this.getNodeAtPos(inter) == undefined) {
+              let n : Node = new Node(inter, this.nCounter);
+              this.nCounter++;
+            }
+          }
+        }
+    
+        return e.getLength() >= this.hSegLengthMin;*/ return true;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = RoadGenerator;
+
+
+
+/***/ }),
+/* 71 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+
+class Edge {
+    constructor(end1, end2, i, h) {
+        this.endpoint1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        this.endpoint2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint1, end1);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint2, end2);
+        this.id = i;
+        this.highway = h;
+    }
+    getLength() {
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint1, this.endpoint2);
+    }
+    getMidpoint() {
+        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, this.endpoint1, this.endpoint2);
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(temp[0] / 2, temp[1] / 2);
+    }
+    getClosestEndpoint(pos) {
+        let dist1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint1, pos);
+        let dist2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(this.endpoint2, pos);
+        if (dist1 <= dist2) {
+            return this.endpoint1;
+        }
+        return this.endpoint2;
+    }
+    // Get the direction vector going from point 1 to point 2
+    getDirectionVector() {
+        let dir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(dir, this.endpoint2, this.endpoint1);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(dir, dir);
+        return dir;
+    }
+    // Two edges are equal if their endpoints are in the same position, within an 
+    // epsilon. The direction of the points does not matter.
+    equals(e, epsilon) {
+        // Ask if this edge's endpoints are stored left to right
+        let leftToRight = this.endpoint1[0] <= this.endpoint2[0];
+        let end1 = e.endpoint1;
+        let end2 = e.endpoint2;
+        if ((leftToRight && end1[0] > end2[0]) || (!leftToRight && end1[0] < end2[0])) {
+            end1 = e.endpoint2;
+            end2 = e.endpoint1;
+        }
+        return Math.abs(this.endpoint1[0] - end1[0]) <= epsilon
+            && Math.abs(this.endpoint1[1] - end1[1]) <= epsilon
+            && Math.abs(this.endpoint2[0] - end2[0]) <= epsilon
+            && Math.abs(this.endpoint2[1] - end2[1]) <= epsilon;
+    }
+    // Check if the given edge intersects with this one.
+    // This handles intersections even between parallel edges.
+    // The implementation of this is drawn entirely from this page:
+    // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+    // If there is no intersection, the function returns undefined.
+    intersectSegment(q1, q2) {
+        let p = this.endpoint1;
+        let r = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(r, this.endpoint2, this.endpoint1);
+        let q = q1;
+        let s = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(s, q2, q1);
+        let qp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(qp, q, p);
+        let qpxr = qp[0] * r[1] - qp[1] * r[0];
+        let rxs = r[0] * s[1] - r[1] * s[0];
+        if (Math.abs(rxs) < 0.01) { // r x s = 0
+            if (Math.abs(qpxr) < 0.01) { // (q - p) x r = 0
+                let qpr = qp[0] * r[0] + qp[1] * r[1];
+                let rr = r[0] * r[0] + r[1] * r[1];
+                let sr = s[0] * r[0] + s[1] * r[1];
+                let t0 = qpr / rr;
+                let t1 = t0 + (sr / rr);
+                let first = t0;
+                let second = t1;
+                if (sr < 0) {
+                    first = t1;
+                    second = t0;
+                }
+                // test [first, second] for overlap with the interval [0, 1]
+                if (first <= 1 && 0 <= second) {
+                    let result = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+                    if (t0 >= 0 && t0 <= 1) {
+                        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(result, p, r, t0);
+                    }
+                    else {
+                        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(result, p, r, t1);
+                    }
+                    return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(result[0], result[1]);
+                }
+                else {
+                    return undefined;
+                }
+            }
+            else {
+                return undefined;
+            }
+        }
+        else {
+            let qpxs = qp[0] * s[1] - qp[1] * s[0];
+            let u = qpxr / rxs;
+            let t = qpxs / rxs;
+            if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+                let result = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scaleAndAdd(result, p, r, t);
+                return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(result[0], result[1]);
+            }
+        }
+    }
+    intersectEdge(e) {
+        return this.intersectSegment(e.endpoint1, e.endpoint2);
+    }
+    // First parameter is bottom left corner,
+    // second parameter is top right corner.
+    // For the edge to intersect (be inside) the quad, either two cases must occur:
+    // 1. at least one of its endpoints must be within the boundary.
+    // 2. at least one of the quad's sides must intersect with the edge.
+    intersectQuad(cornerbl, cornertr) {
+        if ((this.endpoint1[0] >= cornerbl[0] && this.endpoint1[0] <= cornertr[0]
+            && this.endpoint1[1] >= cornerbl[1] && this.endpoint1[1] <= cornertr[1])
+            || (this.endpoint2[0] >= cornerbl[0] && this.endpoint2[0] <= cornertr[0]
+                && this.endpoint2[1] >= cornerbl[1] && this.endpoint2[1] <= cornertr[1])) {
+            return true;
+        }
+        return this.intersectSegment(cornerbl, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornerbl[0], cornertr[1])) != undefined
+            || this.intersectSegment(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornerbl[0], cornertr[1]), cornertr) != undefined
+            || this.intersectSegment(cornertr, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornertr[0], cornerbl[1])) != undefined
+            || this.intersectSegment(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornertr[0], cornerbl[1]), cornerbl) != undefined;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Edge;
+
+
+
+/***/ }),
+/* 72 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+
+class Node {
+    constructor(pos, i) {
+        this.x = pos[0];
+        this.y = pos[1];
+        this.id = i;
+    }
+    getPosition() {
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.x, this.y);
+    }
+    changePosition(pos) {
+        this.x = pos[0];
+        this.y = pos[1];
+    }
+    equals(n, epsilon) {
+        return Math.abs(this.x - n.x) < epsilon
+            && Math.abs(this.y - n.y) < epsilon;
+    }
+    distanceFrom(pos) {
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.x, this.y), pos);
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Node;
+
+
+
+/***/ }),
+/* 73 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+
+class Turtle {
+    constructor(pos, orient, dep) {
+        this.position = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        this.orientation = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        this.depth = 0;
+        this.stepLength = 0;
+        this.stepDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        this.angleHistory = [];
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.orientation, orient);
+        this.depth = dep;
+    }
+    moveForward(amt) {
+        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(temp, this.orientation, amt);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(this.position, this.position, temp);
+    }
+    rotate(deg) {
+        let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].rotate(transform, transform, deg * 0.01745329251);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].transformMat3(this.orientation, this.orientation, transform);
+        this.angleHistory.push(deg);
+    }
+    setPosition(pos) {
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
+    }
+    setOrientation(orient) {
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.orientation, orient);
+    }
+    clearAngleHistory() {
+        this.angleHistory = [];
+    }
+}
+/* harmony default export */ __webpack_exports__["a"] = (Turtle);
+
 
 /***/ }),
 /* 74 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nin vec4 fs_Col;\r\n\r\nout vec4 out_Col;\r\n\r\nvoid main()\r\n{\r\n    out_Col = fs_Col;\r\n}\r\n"
+module.exports = "#version 300 es\r\n\r\nuniform mat4 u_ViewProj;\r\nuniform float u_Time;\r\nuniform mat3 u_2DProj;\r\n\r\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\r\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\r\n\r\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\r\nin vec4 vs_Nor; // Non-instanced, and presently unused\r\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\r\nin vec3 vs_Transform1; // Another instance rendering attribute; column 1 of transform matrix\r\nin vec3 vs_Transform2; // Another instance rendering attribute; column 2 of transform matrix\r\nin vec3 vs_Transform3; // Another instance rendering attribute; column 3 of transform matrix\r\nin vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to use it for your meshes.\r\n\r\nout vec4 fs_Col;\r\n\r\nvoid main()\r\n{\t\r\n    mat3 transform = mat3(vs_Transform1, vs_Transform2, vs_Transform3);\r\n    vec3 pos = vec3(vs_Pos.x, vs_Pos.y, vs_Pos.w);\r\n    vec3 res = u_2DProj * transform * pos;\r\n    gl_Position = vec4(res.x, res.y, 0., 1.);\r\n\r\n    fs_Col = vs_Col;\r\n}\r\n"
 
 /***/ }),
 /* 75 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\n// The vertex shader used to render the background of the scene\r\n\r\nin vec4 vs_Pos;\r\nout vec2 fs_Pos;\r\n\r\nvoid main() {\r\n  fs_Pos = vs_Pos.xy;\r\n  gl_Position = vs_Pos;\r\n}\r\n"
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nin vec4 fs_Col;\r\n\r\nout vec4 out_Col;\r\n\r\nvoid main()\r\n{\r\n    out_Col = fs_Col;\r\n}\r\n"
 
 /***/ }),
 /* 76 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\nuniform float u_Time;\r\n\r\nuniform float u_ShowElevation;  // True if > 0\r\nuniform float u_ShowPopulation; // True if > 0\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat noise(float i) {\r\n\treturn fract(sin(vec2(203.311f * float(i), float(i) * sin(0.324f + 140.0f * float(i))))).x;\r\n}\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1, 311.7))) * 43758.5453);\r\n}\r\n\r\nfloat interpNoise1D(float x) {\r\n\tfloat intX = floor(x);\t\r\n\tfloat fractX = fract(x);\r\n\r\n\tfloat v1 = noise(intX);\r\n\tfloat v2 = noise(intX + 1.0f);\r\n\treturn mix(v1, v2, fractX);\r\n}\r\n\r\nfloat fbm(float x) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfloat freq = pow(2.0f, float(i));\r\n\t\tfloat amp = pow(persistence, float(i));\r\n\r\n\t\ttotal += interpNoise1D(x * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tfloat intX = floor(x);\r\n\tfloat fractX = fract(x);\r\n\tfloat intY = floor(y);\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0));\r\n\tfloat v2 = random(vec2(intX + 1.0f, intY), vec2(0));\r\n\tfloat v3 = random(vec2(intX, intY + 1.0f), vec2(0));\r\n\tfloat v4 = random(vec2(intX + 1.0f, intY + 1.0f), vec2(0));\r\n\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfloat freq = pow(2.0f, float(i));\r\n\t\tfloat amp = pow(persistence, float(i));\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)) * 43758.5453)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\t// Land vs. Water Graph\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1., -0.4)), 5.);\r\n\tif(height < u_WaterLevel) {\r\n \t\tout_Col = vec4(vec3(66., 134., 244.) / 255., 1.);\r\n  \t} else {\r\n  \t\tout_Col = vec4(1.);\r\n  \t}\r\n\t\r\n\t// Show elevation\r\n\tif(u_ShowElevation > 0.) {\r\n\t\tif(height < u_WaterLevel) {\r\n\t \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n\t\t} else if (height < 0.8) {\r\n\t\t\tout_Col = vec4(vec3(132., 58., 84.) / 255., 1.);\r\n\t\t} else if (height < 1.4) {\r\n\t\t\tout_Col = vec4(vec3(181., 130., 141.) / 255., 1.);\r\n\t\t} else if (height < 4.7) {\r\n\t\t\tout_Col = vec4(vec3(239., 225., 230.) / 255., 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(1.);\r\n\t\t}\r\n\t}\r\n\r\n\t// Show population density\r\n\tif(u_ShowPopulation > 0. && height >= u_WaterLevel) {\r\n\t\tfloat population = pow(1. - worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 2.);\r\n\t\tif(population < 0.2) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.1), 1.);\r\n\t\t} else if(population < 0.5) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.4), 1.);\r\n\t\t} else if(population < 0.8) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(130., 232., 67.) / 255., 0.5), 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(22., 158., 62.) / 255., 0.5), 1.);\r\n\t\t}\r\n\t}\r\n\t\r\n}\r\n"
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\n// The vertex shader used to render the background of the scene\r\n\r\nin vec4 vs_Pos;\r\nout vec2 fs_Pos;\r\n\r\nvoid main() {\r\n  fs_Pos = vs_Pos.xy;\r\n  gl_Position = vs_Pos;\r\n}\r\n"
+
+/***/ }),
+/* 77 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\nuniform float u_Time;\r\n\r\nuniform float u_ShowElevation;  // True if > 0\r\nuniform float u_ShowPopulation; // True if > 0\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\t// Land vs. Water Graph\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tif(height < u_WaterLevel) {\r\n \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n  \t} else {\r\n  \t\tout_Col = vec4(1.);\r\n  \t}\r\n\t\r\n\t// Show elevation\r\n\tif(u_ShowElevation > 0.) {\r\n\t\tif(height < u_WaterLevel) {\r\n\t \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n\t\t} else if (height < 0.8) {\r\n\t\t\tout_Col = vec4(vec3(132., 58., 84.) / 255., 1.);\r\n\t\t} else if (height < 1.4) {\r\n\t\t\tout_Col = vec4(vec3(181., 130., 141.) / 255., 1.);\r\n\t\t} else if (height < 4.7) {\r\n\t\t\tout_Col = vec4(vec3(239., 225., 230.) / 255., 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(1.);\r\n\t\t}\r\n\t}\r\n\r\n\t// Show population density\r\n\tif(u_ShowPopulation > 0. && height >= u_WaterLevel) {\r\n\t\tfloat population = pow(worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 3.);\r\n\t\tif(population < 0.2) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.1), 1.);\r\n\t\t} else if(population < 0.5) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.4), 1.);\r\n\t\t} else if(population < 0.8) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(130., 232., 67.) / 255., 0.5), 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(22., 158., 62.) / 255., 0.5), 1.);\r\n\t\t}\r\n\t}\r\n\t\r\n}\r\n"
+
+/***/ }),
+/* 78 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\n// The vertex shader used to render the background of the scene\r\n\r\nin vec4 vs_Pos;\r\nout vec2 fs_Pos;\r\n\r\nvoid main() {\r\n  fs_Pos = vs_Pos.xy;\r\n  gl_Position = vs_Pos;\r\n}\r\n"
+
+/***/ }),
+/* 79 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\n\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\tout_Col = vec4(vec3(0.), 1.);\r\n\r\n\t// Map data to the RGB components of each pixel.\r\n\t// Let height correspond with the G value\r\n\t// and population with the R value.\r\n\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tfloat population = pow(1. - worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 3.);\r\n\r\n\tout_Col.g = height / 5.;\r\n  \tout_Col.r = population;\r\n}\r\n"
 
 /***/ })
 /******/ ]);

@@ -326,7 +326,7 @@ export function testEdge() {
 
 export function testRoadGenerator() {
 	// 8 x 8 grid of cells 64 units wide
-	let rg : RoadGenerator = new RoadGenerator(512, 8);
+	let rg : RoadGenerator = new RoadGenerator(vec2.fromValues(512, 512), vec2.fromValues(8, 8));
 
 	function testRoadGeneratorOutOfBoundsYes() {
 		let t : boolean = rg.outOfBounds(vec2.fromValues(-4, 50));
