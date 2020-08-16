@@ -64,7 +64,7 @@ The generator will also try to branch the highways if there are two points of co
 
 ![](highway2.png)
 
-This method won't guarantee that the roads don't spawn multiple branches leading to population hotspots. If the `Turtle` draws in small increments, it may spawn multiple branches towards the same population peak; an example of this undesired behavior is shown below. Thus, the length that a `Turtle` travels at a time is large. The `Turtle` tries to compensate for the lost detail as it actually renders the highway, explained in a later section.
+These weight checks were implemented to discourage frequent branching; an example of this undesired behavior observed is shown below. As an additional safeguard, the length that a `Turtle` travels at a time is large.
 
 ![](hwmany.png)
 
@@ -80,20 +80,19 @@ This happened when a `Turtle` was on the periphery of a population hotspot; it w
 
 The generator is always looking for grids to be spawned from the highways for maximum road coverage. Once a highway has been committed to the network, a series of smaller streets can be spawned from it to form grid-based neighborhoods. 
 
-To determine how the grids grow from a highway, first the generator determines what angle the grid system should follow. The generator has a global direction to determine where these roads 
+To determine how the grids grow from a highway, the generator first determines what angle the grid system should follow. The generator has a global direction to determine where these road 
 
 case 1: angle between perpendicular and global direction is close, choose global dir
 case 2: angle between road direction and global direction is close. choose perpendicular to global dir
 case 3: local perpendicular
 
-
 The `Turtle` depth value 
 
 **General Constraints**
 
-- **City Bounds**:
+- **City Bounds**: If a road extends beyond the bounds of the city, the network will stop attempting to expand from that road's endpoint.
 
-- **Water Level**: It is illegal for any road to end in a body of water, so the network must check if such edges exist. If a newly created edge ends in the water, the generator tries to extend the road to a nearby shore if it's a highway, or shorten the road to end on land. If the highway cannot be successfully stretched, or the resulting edge is too short, it is disregarded.
+- **Water Level**: It is illegal for any road to end in a body of water, so the network must check if such edges exist. If a newly created highway ends in the water, the generator will try to extend the road to the shore in the road's direction. If it cannot be stretched, or if the road is a regular street, the generator will try to shorten the road so its endpoint is on land. If the resulting edge is too short, it is disregarded.
 
 - **Self-Sensitivity**: Given a new edge, the network determines the closest intersection to the end of the edge; if it falls close enough to the edge (as defined by a chosen radius), the edge snaps to that intersection. The network then generates all intersections this new edge has with other edges in the network, provided they don't already exist. Finally, the closest new intersection is also managed so that if it occurs within a similar threshold, the end of the edge snaps to that new intersection.
 

@@ -327,6 +327,7 @@ export function testEdge() {
 export function testRoadGenerator() {
 	// 8 x 8 grid of cells 64 units wide
 	let rg : RoadGenerator = new RoadGenerator(vec2.fromValues(512, 512), vec2.fromValues(8, 8));
+	rg.reset();
 
 	function testRoadGeneratorOutOfBoundsYes() {
 		let t : boolean = rg.outOfBounds(vec2.fromValues(-4, 50));
@@ -492,6 +493,28 @@ export function testRoadGenerator() {
 		}
 	}
 
+	function testRoadGeneratorSortEdgeIntersection() {
+		let sortedEdge : Edge = new Edge(vec2.fromValues(100, 100), vec2.fromValues(200, 200), 0, false);
+		let intersectingEdge : Edge = new Edge(vec2.fromValues(125, 150), vec2.fromValues(210, 180), 1, false);
+
+		rg.sortEdge(sortedEdge);
+
+		let interCells : Array<number> = rg.getEdgeCells(intersectingEdge);
+    	for(let i = 0; i < interCells.length; i++) {
+    		let cellNum = interCells[i];
+      		for(let j = 0; j < rg.ecells[cellNum].length; j++) {
+        		let inter : vec2 = intersectingEdge.intersectEdge(rg.ecells[cellNum][j]);
+        		if(vec2Equality(inter, sortedEdge.intersectEdge(intersectingEdge))) {
+        			console.log("Road Generator Sort Edge Intersection: passed!");
+        		} else {
+        			console.log("Road Generator Sort Edge Intersection: failed.",
+        						inter, sortedEdge.intersectEdge(intersectingEdge));
+        		}
+        	}
+    	}
+    
+	}
+
 	testRoadGeneratorOutOfBoundsYes();
 	testRoadGeneratorOutOfBoundsNo();
 	testRoadGeneratorGetPosCellNumber();
@@ -502,5 +525,5 @@ export function testRoadGenerator() {
 	testRoadGeneratorSortNodeUnsuccessful();
 	testRoadGeneratorSortEdgeSuccessful();
 	testRoadGeneratorSortEdgeUnsuccessful();
-
+	testRoadGeneratorSortEdgeIntersection();
 }

@@ -16,7 +16,7 @@ export default class RoadGenerator {
   public ecells : Array<Array<Edge>>;
 
   public startPos : vec2;
-  public startPosLocked : boolean = false;
+  public useMyStartPos : boolean = false;
 
   private turtles : Array<Turtle>;
   private turtlesToAdd : Array<Turtle>;
@@ -31,14 +31,16 @@ export default class RoadGenerator {
   private searchAngle : number = 90;
   private searchSteps : number = 6;
   private branchThreshold : number = 45;
-  private hSegLengthMax : number = 100;
-  private hSegLengthMin : number = 100;
-  private branchFreq : number = -3;
+  private hSegLength : number = 100;
 
   private maxBlocks : number = 20;
+  private gridLength : number = 30;
+  private gridWidth : number = 15;
+  private gridAngle : number = 0;
   private globalDirection : vec2 = vec2.fromValues(1.0, 0);
+  private sensitivityRadius = 20;
 
-  private nodeEpsilon : number = 0.1;
+  private nodeEpsilon : number = 2.5;
 
   private nCounter : number = 0;
   private eCounter : number = 0;
@@ -46,8 +48,8 @@ export default class RoadGenerator {
   // Pixel data that is rendered in the frame buffer
   // and passed into the generator.
 
-  private data: Uint8Array;
-  private dataSize : vec2;
+  private data: Uint8Array = undefined;
+  private dataSize : vec2 = undefined;
 
   constructor(cs: vec2, gs: vec2) {
     this.citySize = cs;
@@ -60,9 +62,17 @@ export default class RoadGenerator {
     this.reset();
   }
 
-  public setStartPos(sp: vec2, lock: boolean) {
+  public setStartPos(sp: vec2) {
     vec2.copy(this.startPos, sp);
-    this.startPosLocked = lock;
+  }
+
+  public setUseMyStartPos(lock: boolean) {
+    this.useMyStartPos = lock;
+  }
+
+  public setGridAngle(angle: number) {
+    this.gridAngle = angle;
+    this.globalDirection = vec2.fromValues(this.cosDeg(angle), this.sinDeg(angle));
   }
 
   // Gets the green component of the image
@@ -103,9 +113,14 @@ export default class RoadGenerator {
 
     this.turtles = [];
     this.turtlesToAdd = [];
+    this.gridTurtles = [];
+
+    if(this.data == undefined) {
+      return;
+    }
 
     // Bias the random point towards the edges.
-    if(!this.startPosLocked) {
+    if(!this.useMyStartPos) {
       do {
         let xValue : number = Math.random() * 0.09 * this.citySize[0]
                               + 0.01 * this.citySize[0],
@@ -122,12 +137,11 @@ export default class RoadGenerator {
 
         this.startPos = vec2.fromValues(xValue, yValue);
       } while(this.getElevation(this.startPos) <= this.waterLevel);
-
-      console.log("Starting position:" + this.startPos);
     }
 
-    // Based on the random position, attempt to make the Turtle face the direction with the most
-    // promising population density, as long as it points in a general direction towards the center of the map.
+    // Based on the position, attempt to make Turtle face
+    // the direction with the most promising population density,
+    // as long as it points in a general direction towards the center of the map.
 
     let rotation : number = 0;
     let maxWeight : number = -1;
@@ -168,22 +182,41 @@ export default class RoadGenerator {
 
     let t : Turtle = new Turtle(this.startPos, finalDir, -1);
     this.turtles.push(t);
+    this.sortNode(new Node(this.startPos, this.nCounter));
   }
 
   // Given height and population data, generate a substantial set of roads that covers it
   public generateRoads() {
-    let maxIterations : number = 15;
-   
-     //this.mainRoads.push(new Edge(vec.fromValues(0, 0), citySize, 0, true));
-     //this.branchGrid(this.mainRoads[0]);
+    // Hard cap to guarantee that the program ends and won't infinitely loop
+    let maxIterations : number = 20;
      
-     for(let j = 0; j < maxIterations && this.turtles.length > 0; j++) {
-     // console.log(this.turtles.length);
-      
+     // First we lay out the highways
+    for(let j = 0; j < maxIterations && this.turtles.length > 0; j++) {
       for(let i = 0; i < this.turtles.length; i++) {
-        this.branchRoad(this.turtles[i]);
+        this.branchHighway(this.turtles[i]);
       }
 
+      let activeTurtles : Array<Turtle> = [];
+
+      for(let i = 0; i < this.turtles.length; i++) {
+        if(this.drawRoad(this.turtles[i])) {
+          activeTurtles.push(this.turtles[i]);
+        }
+      } 
+
+      this.turtles = activeTurtles;
+      this.turtles = this.turtles.concat(this.turtlesToAdd);
+      this.turtlesToAdd = [];
+    }
+
+    this.turtles = [];
+
+    // Then start to layout grid roads
+    for(let i = 0; i < this.mainRoads.length; i++) {
+      this.branchGrid(this.mainRoads[i]);
+    }
+
+    for(let j = 0; j < maxIterations * 2 && this.turtles.length > 0; j++) {
       let activeTurtles : Array<Turtle> = [];
 
       for(let i = 0; i < this.turtles.length; i++) {
@@ -197,6 +230,8 @@ export default class RoadGenerator {
       this.turtles = this.turtles.concat(this.turtlesToAdd);
       this.turtlesToAdd = [];
     }
+
+
 
     console.log("done!");
   }
@@ -253,7 +288,11 @@ export default class RoadGenerator {
     let cellx : number = Math.floor(p[0] / this.cellWidth), 
         celly : number = Math.floor(p[1] / this.cellWidth);
 
-    let celln : number = Math.floor(this.gridSize[0] * celly + cellx);
+    return this.getCellNumberFromRowCol(cellx, celly);
+  }
+
+  public getCellNumberFromRowCol(x: number, y: number) : number {
+    let celln : number = Math.floor(this.gridSize[0] * y + x);
     if(celln < 0 || celln >= this.gridSize[0] * this.gridSize[1]) {
       return undefined;
     }
@@ -337,7 +376,7 @@ export default class RoadGenerator {
     }
     
     array.push(n);
-
+    this.nCounter++;
     return true;
   }
 
@@ -353,6 +392,9 @@ export default class RoadGenerator {
     for(let i: number = 0; i < cells.length; i++) {
       this.ecells[cells[i]].push(e);
     }
+
+    this.eCounter++;
+
     return true;
   }
 
@@ -385,23 +427,13 @@ export default class RoadGenerator {
   // ROAD DRAWING & FUNCTIONS
   //////////////////////////////////////
 
-  private branchRoad(t: Turtle) {
-    if(t.depth < 0) {
-      this.branchHighway(t, this.searchAngle, this.searchRadius);
-    }
-  }
-
-  // store the distance travelled in the turtle.
   // Rotates the turtle such that it will draw in the direction of the most
   // highly weighted direction above a certain threshold, while generating
-  // a new Turtle if 1. turtle rotates enough off its original course and
-  // 2. the population of the original direction is high enough
+  // a new Turtle if either 1. the turtle rotates enough off its original course
+  // and its current route is still strongly populated, or 2. the Turtle can go towards
+  // two population peaks that are spread apart from each other
 
-
-  // Branches the highways if the turtle has travelled more than the radius.
-
-  // THEN ATTEMPT TO IMPLEMENT INTERSECTION DETECTION
-   private branchHighway(t: Turtle, angle: number, radius : number) {
+   private branchHighway(t: Turtle) {
 
     let rotation : number = 0;
     let secondRotation : number = 0;
@@ -410,7 +442,8 @@ export default class RoadGenerator {
 
     let currentWeight : number = -1;
 
-    for(let i = -angle / 2; i <= angle / 2; i += angle / 8) {
+    for(let i = -this.searchAngle / 2; i <= this.searchAngle / 2;
+                                       i += this.searchAngle / 8) {
       let tempTurtle : Turtle = new Turtle(t.position,
                                            t.orientation,
                                            -1);
@@ -418,7 +451,7 @@ export default class RoadGenerator {
       let weight : number = 0;
 
       for(let j = 0; j < this.searchSteps; j++) {
-        tempTurtle.moveForward(radius / this.searchSteps);
+        tempTurtle.moveForward(this.searchRadius / this.searchSteps);
         if(this.outOfBounds(tempTurtle.position)) {
           break;
         }
@@ -432,7 +465,7 @@ export default class RoadGenerator {
       if(Math.abs(i) < 0.1) {
         currentWeight = weight;
         for(let j = 0; j < this.searchSteps / 2; j++) {
-          tempTurtle.moveForward(radius / (4 * this.searchSteps));
+          tempTurtle.moveForward(this.searchRadius / (4 * this.searchSteps));
           if(this.outOfBounds(tempTurtle.position)) {
             break;
           }
@@ -454,18 +487,6 @@ export default class RoadGenerator {
       }
     }
 
-  /*
-    // scan for nearby turtles
-    for(let i = 0; i < this.highwayTurtles.length; i++) {
-      if(!this.vec2Equality(t.position, this.highwayTurtles[i].position) &&
-          vec2.distance(t.position, this.highwayTurtles[i].position) <= this.searchRadius) {
-        // check if their current trajectories are going to intersect
-        if(this.willIntersect(t, this.highwayTurtles[i])) {
-          this.highwayTurtles[i]
-        }
-      }
-    }*/
-
     let nt : Turtle = new Turtle(t.position, t.orientation, -1);
 
     // Branch if the threshold is passed & the original direction is promising enough
@@ -486,12 +507,15 @@ export default class RoadGenerator {
     }
   }
 
-  private branchGrid(e: Edge) {
-    // We use the Turtle "depth" to store numbers 
-    let minLength : number = 10;
+  private branchGridFromHighway(e: Edge) {
+    if(!e.highway) {
+      return;
+    }
 
-    let stepLength : number = Math.max(minLength, e.getLength() / this.maxBlocks);
-    let maxSteps : number = Math.floor(e.getLength() / stepLength);
+    let maxSteps : number = Math.floor(e.getLength() / this.gridLength);
+    if(e.getLength() / this.gridLength - maxSteps < 0.5) {
+      maxSteps--;
+    }
 
     let dir : vec2 = e.getDirectionVector();
     let perpLocal : vec2 = dir[1] != 0 ? vec2.fromValues(1, -dir[0] / dir[1]) 
@@ -514,10 +538,10 @@ export default class RoadGenerator {
     let gridDir : vec2 = vec2.create();
     let gridPerpDir : vec2 = vec2.create();
     
-    if(anglePerp * 57.2957795 < 15) { 
+    if(anglePerp * 180 / Math.PI < 15) { 
       vec2.copy(gridDir, this.globalDirection);
       vec2.copy(gridPerpDir, perpGlobal);
-    } else if (angleRoadDir * 57.2957795 < 15) {
+    } else if (angleRoadDir * 180 / Math.PI < 15) {
       vec2.copy(gridDir, perpGlobal);
       vec2.copy(gridPerpDir, this.globalDirection);
     } else {
@@ -525,18 +549,131 @@ export default class RoadGenerator {
       gridPerpDir = dir;
     }
 
+    let tempTurtle : Turtle = new Turtle(e.endpoint1, dir, 0);
+    for(let i : number = 0; i <= maxSteps; i++) {
+      let t : Turtle = new Turtle(tempTurtle.position, gridDir, 0);
+      t.stepLength = this.gridLength;
+      vec2.copy(t.stepDir, gridPerpDir);
+      this.turtles.push(t);
+      this.sortNode(new Node(t.position, this.nCounter));
+      let oppDir : vec2 = vec2.fromValues(-gridDir[0], -gridDir[1]);
+      let t2 : Turtle = new Turtle(tempTurtle.position, oppDir, 0);
+      t2.stepLength = this.gridLength;
+      vec2.copy(t2.stepDir, gridPerpDir);
+      this.turtles.push(t2);
+      this.sortNode(new Node(t2.position, this.nCounter));
+      tempTurtle.moveForward(this.gridLength);
+    }
+  }
+
+  private branchGridFromGrid(e: Edge) {
+    /*if(e.highway) {
+      return;
+    }
+
+    let maxSteps : number = Math.floor(e.getLength() / this.gridLength);
+    if(e.getLength() / this.gridLength - maxSteps < 0.5) {
+      maxSteps--;
+    }
+
+    let dir : vec2 = e.getDirectionVector();
+    let perpLocal : vec2 = dir[1] != 0 ? vec2.fromValues(1, -dir[0] / dir[1]) 
+                                       : vec2.fromValues(0, 1);
+
+    let gridDir : vec2 = vec2.create();
+    let gridPerpDir : vec2 = vec2.create();
+    
+    if(anglePerp * 180 / Math.PI < 15) { 
+      vec2.copy(gridDir, this.globalDirection);
+      vec2.copy(gridPerpDir, perpGlobal);
+    } else if (angleRoadDir * 180 / Math.PI < 15) {
+      vec2.copy(gridDir, perpGlobal);
+      vec2.copy(gridPerpDir, this.globalDirection);
+    } else {
+      gridDir = perpLocal;
+      gridPerpDir = dir;
+    }
+
+    let tempTurtle : Turtle = new Turtle(e.endpoint1, dir, 0);
+    for(let i : number = 0; i <= maxSteps; i++) {
+      let t : Turtle = new Turtle(tempTurtle.position, gridDir, 0);
+      t.stepLength = this.gridLength;
+      vec2.copy(t.stepDir, gridPerpDir);
+      this.turtles.push(t);
+      this.sortNode(new Node(t.position, this.nCounter));
+      let oppDir : vec2 = vec2.fromValues(-gridDir[0], -gridDir[1]);
+      let t2 : Turtle = new Turtle(tempTurtle.position, oppDir, 0);
+      t2.stepLength = this.gridLength;
+      vec2.copy(t2.stepDir, gridPerpDir);
+      this.turtles.push(t2);
+      this.sortNode(new Node(t2.position, this.nCounter));
+      tempTurtle.moveForward(this.gridLength);
+    }*/
+  }
+
+
+  private branchGrid(e: Edge) {
+    // We use the Turtle "depth" to store numbers 
+    let minLength : number = 10;
+    let maxSteps : number = Math.floor(e.getLength() / this.gridLength);
+
+    let dir : vec2 = e.getDirectionVector();
+    let perpLocal : vec2 = dir[1] != 0 ? vec2.fromValues(1, -dir[0] / dir[1]) 
+                                       : vec2.fromValues(0, 1);
+    let perpGlobal : vec2 = this.globalDirection[1] != 0
+                                      ? vec2.fromValues(1, -this.globalDirection[0] / this.globalDirection[1])
+                                      : vec2.fromValues(0, 1);
+    
+    vec2.normalize(perpLocal, perpLocal);
+    vec2.normalize(perpGlobal, perpGlobal);
+
+    let anglePerp : number = Math.acos(vec2.dot(perpLocal, this.globalDirection) /
+                         (vec2.length(perpLocal) * vec2.length(this.globalDirection)));
+
+    let angleRoadDir : number = Math.acos(vec2.dot(dir, this.globalDirection) /
+                         (vec2.length(dir) * vec2.length(this.globalDirection)));
+
+    // change direction depending on which (if any)
+    // of the two directions are closest to direction vector
+    let gridDir : vec2 = vec2.create();
+    let gridPerpDir : vec2 = vec2.create();
+    
+    /*if(anglePerp * Math.PI / 180 < 15) { 
+      vec2.copy(gridDir, this.globalDirection);
+      vec2.copy(gridPerpDir, perpGlobal);
+    } else if (angleRoadDir * Math.PI / 180 < 15) {
+      vec2.copy(gridDir, perpGlobal);
+      vec2.copy(gridPerpDir, this.globalDirection);
+    } else {*/
+      gridDir = perpLocal;
+      gridPerpDir = dir;
+    //}
+
     // This turtle marches along the existing highway to spawn grid turtles along the sides
     let tempTurtle : Turtle = new Turtle(e.endpoint1, dir, 0);
     for(let i : number = 0; i <= maxSteps; i++) {
-      tempTurtle.moveForward(stepLength);
       let t : Turtle = new Turtle(tempTurtle.position, gridDir, 0);
-      t.stepLength = stepLength;
+      t.stepLength = this.gridLength;
       vec2.copy(t.stepDir, gridPerpDir);
-      this.gridTurtles.push(t);
+      this.turtles.push(t);
+
+      let oppDir : vec2 = vec2.fromValues(-gridDir[0], -gridDir[1]);
+      let t2 : Turtle = new Turtle(tempTurtle.position, oppDir, 0);
+      t2.stepLength = this.gridLength;
+      vec2.copy(t2.stepDir, gridPerpDir);
+      this.turtles.push(t2);
+
+      this.sortNode(new Node(tempTurtle.position, this.nCounter));
+
+      tempTurtle.moveForward(this.gridLength);
     }
   }
 
   private drawRoad(t: Turtle): boolean {
+    if(this.getNodeAtPos(t.position) == undefined) {
+      this.sortNode(new Node(t.position, this.nCounter));
+    }
+
     if(t.depth < 0) {
       return this.drawHighway(t);
     }
@@ -544,48 +681,66 @@ export default class RoadGenerator {
   }
 
   private drawHighway(t: Turtle) : boolean {
-    Math.random();
     let oldPos : vec2 = vec2.fromValues(t.position[0], t.position[1]);
-    t.moveForward(this.hSegLengthMin);
-    let endpoint : Node = new Node(oldPos, this.nCounter);
+    t.moveForward(this.hSegLength);
     let road : Edge = new Edge(oldPos, vec2.fromValues(t.position[0], t.position[1]), this.eCounter, true);
     if(!this.fixForConstraints(road)) {
       return false;
     }
 
+    let continueDrawing : boolean = this.adjustForNearbyRoads(road);
     vec2.copy(t.position, road.endpoint2);
-
-    this.nCounter++;
-    this.eCounter++;
     this.sortEdge(road);
-    this.sortNode(endpoint);
+    this.sortNode(new Node(oldPos, this.nCounter));
     this.mainRoads.push(road);
 
-    //this.branchGrid(road);
-
-    return true;
+    return continueDrawing;
   }
 
-  private drawGrid(t: Turtle) : boolean {
-    if(t.depth >= this.maxBlocks) {
+
+  private drawGridNew(t: Turtle) : boolean {
+    let oldPos : vec2 = vec2.fromValues(t.position[0], t.position[1]);
+    if(t.depth == 0) {
+      t.moveForward(this.gridLength * 5);
+    } else {
+      t.moveForward(this.gridWidth);
+    }
+
+    let road : Edge = new Edge(oldPos, vec2.fromValues(t.position[0], t.position[1]), this.eCounter, false);
+    if(!this.fixForConstraints(road)) {
       return false;
     }
 
+    this.sortNode(new Node(oldPos, this.nCounter));
+    let continueDrawing : boolean = this.adjustForNearbyRoads(road);
+    vec2.copy(t.position, road.endpoint2);
+    this.sortEdge(road);
+    this.smallRoads.push(road);
+
+    return continueDrawing;
+  }
+
+  private drawGrid(t: Turtle) : boolean {
+    /*if(t.depth >= this.maxBlocks) {
+      return false;
+    }*/
+
     let upRoadDrawn : boolean = false;
     let forwardRoadDrawn : boolean = false;
+    let keepDrawing : boolean = true;
 
     let oldPos : vec2 = vec2.fromValues(t.position[0], t.position[1]);
     let oldOri : vec2 = vec2.fromValues(t.orientation[0], t.orientation[1]);
+
     if(t.depth > 0) {
       t.setOrientation(t.stepDir);
       t.moveForward(t.stepLength);
-      let endpoint : Node = new Node(oldPos, this.nCounter);
       let road : Edge = new Edge(oldPos, vec2.fromValues(t.position[0], t.position[1]), this.eCounter, false);
       if(this.fixForConstraints(road)) {
-        this.nCounter++;
-        this.eCounter++;
+        keepDrawing = keepDrawing && this.adjustForNearbyRoads(road);
         this.sortEdge(road);
-        this.sortNode(endpoint);
+        this.sortNode(new Node(oldPos, this.nCounter));
+        this.sortNode(new Node(road.endpoint2, this.nCounter));
         this.smallRoads.push(road);
         upRoadDrawn = true;
       }
@@ -593,17 +748,24 @@ export default class RoadGenerator {
       t.setOrientation(oldOri);
     }
 
-    t.moveForward(20);
-    let road : Edge = new Edge(oldPos, vec2.fromValues(t.position[0], t.position[1]), this.eCounter, false);
-    if(this.fixForConstraints(road)) {
-      this.eCounter++;
-      this.sortEdge(road);
-      this.smallRoads.push(road);
-      forwardRoadDrawn = true;
-      t.depth++;
+    if(keepDrawing) {
+      t.moveForward(this.gridWidth);
+      let road : Edge = new Edge(oldPos, vec2.fromValues(t.position[0], t.position[1]), this.eCounter, false);
+      if(this.fixForConstraints(road)) {
+        keepDrawing = keepDrawing && this.adjustForNearbyRoads(road);
+        t.setPosition(road.endpoint2);
+        this.sortNode(new Node(t.position, this.nCounter));
+        this.sortEdge(road);
+        this.smallRoads.push(road);
+        forwardRoadDrawn = true;
+        t.depth++;
+      }
     }
 
-    return upRoadDrawn || forwardRoadDrawn;
+
+
+
+    return (upRoadDrawn || forwardRoadDrawn) && keepDrawing;
   }
 
   //////////////////////////////////////
@@ -611,16 +773,36 @@ export default class RoadGenerator {
   //////////////////////////////////////
 
   private fixForConstraints(e: Edge) : boolean {
-    return this.fixForBounds(e) && this.fixForWater(e);// && this.fixForNearbyRoads(e);
+    return this.fixForBounds(e) && this.fixForWater(e);
   }
 
   private fixForBounds(e: Edge): boolean {
-    if(this.outOfBounds(e.endpoint2)) {
-      // try to shorten
-      return false;
+    if(this.outOfBounds(e.endpoint1)) {
+      return false; 
     }
 
-    return true;
+    if(!this.outOfBounds(e.endpoint2)) {
+      return true;
+    }
+
+    let temp : vec2 = vec2.create(),
+        increment : vec2 = vec2.create();
+
+    vec2.copy(temp, e.endpoint2);
+    vec2.scale(increment, e.getDirectionVector(), e.getLength() / 4);
+
+    for(let i = 0; i < 4; i++) {
+      vec2.subtract(temp, temp, increment);
+      if(!this.outOfBounds(temp)) {
+        // stretch it so it goes off screen (for aesthetic)
+        vec2.add(temp, temp, increment);
+        vec2.copy(e.endpoint2, temp);
+        return true;
+      }
+      
+    }
+    return false;
+
   }
 
   // Checks if the edge goes into the water and tries to adjust the endpoints'
@@ -629,7 +811,7 @@ export default class RoadGenerator {
 
   private fixForWater(e: Edge): boolean {
     
-    // If the road is a highway, and it ends in a body of water,
+    // If the road is a highway ending in a body of water,
     // we can try to extend it to a piece of land within reach.
     // Otherwise, we let the highway dangle, anticipating that it can be shortened
     // back towards land.
@@ -641,23 +823,26 @@ export default class RoadGenerator {
         return true;
       }
       
-      console.log("correcting!");
       let increment : vec2 = vec2.create();
-      vec2.scale(increment, e.getDirectionVector(), this.hSegLengthMin)
+      vec2.scale(increment, e.getDirectionVector(), this.hSegLength)
       let temp : vec2 = vec2.fromValues(e.endpoint2[0], e.endpoint2[1]);
-      for(let i = 0; i < 10; i++) {
+      for(let i = 0; i < 20; i++) {
         vec2.add(temp, temp, increment);
-        if(this.getElevation(temp) > this.waterLevel && !this.outOfBounds(temp)) {
+        if(this.outOfBounds(temp)) {
+          break;
+        }
+
+        if(this.getElevation(temp) > this.waterLevel) {
           vec2.copy(e.endpoint2, temp);
           return true;
         }
       }
     }
 
-    // Otherwise, if the road is part of the grid network, we check
-    // if the road at any point (within reasonable testing) crosses water.
-    // If so, we truncate the road so it's as long as possible before hitting
-    // water.
+    // Otherwise, if the road is part of the grid network or is a highway
+    // that cannot be extended, we check if the road at any point
+    // (within reasonable testing) crosses water. If so, we truncate the
+    // road so it's as long as possible before hitting water.
 
     let testPoint : vec2 = vec2.create();
     vec2.copy(testPoint, e.endpoint1);
@@ -666,6 +851,7 @@ export default class RoadGenerator {
     for(let i = 0; i < 10; i++) {
       vec2.add(testPoint, testPoint, increment);
       if(this.getElevation(testPoint) <= this.waterLevel) {
+        vec2.subtract(testPoint, testPoint, increment);
         vec2.copy(e.endpoint2, testPoint);
         break;
       }
@@ -677,42 +863,105 @@ export default class RoadGenerator {
   // adds intersections where necessary. If the resulting edge is long enough
   // to be a worthwhile road, return true; else, return false.
   
-  private fixForNearbyRoads(e: Edge) : boolean {
-    
-    // Search for the closest Node; if it falls within a small radius, snap
-    // the edge to that node.
-    let endCell : number = this.getPosCellNumber(e.endpoint2);
-
-    let closest: Node = undefined;
-    let closestDistance: number = Math.max(this.citySize[0], this.citySize[1]);
-
-    if(endCell != undefined) {
-      for(let i = 0; i < this.ncells[endCell].length; i++) {
-        if(this.ncells[endCell][i].distanceFrom(e.endpoint2) < closestDistance) {
-          closest = this.ncells[endCell][i];
-        }
-      }
-
-      if(closest != undefined && closestDistance < this.hSegLengthMin) {
-        vec2.copy(e.endpoint2, closest.getPosition());
-      }
-    }
-
+  private adjustForIntersection(e:Edge) : boolean {
     // Add new intersections where the edge intersects other edges;
-    // keep track of the closest one, and if it is within a reasonable
-    // threshold, snap the end of the edge to that intersection
+    // keep track of the intersection closest to the first endpoint,
+    // then chop the road so it intersects it. This is to ensure
+    // the road doesn't penetrate through others.
 
+    let nodeId : number = this.getNodeAtPos(e.endpoint1).id;
+    let closestMid : Node = undefined;
+    let closestMidDistance : number = Math.max(this.citySize[0], this.citySize[1]);
+    let keepExpanding: boolean = true;
+
+    // Get the indices of the cells that the target edge intersects;
+    // we check these for intersections with other edges.
     let interCells : Array<number> = this.getEdgeCells(e);
     for(let i = 0; i < interCells.length; i++) {
-      for(let j = 0; j < this.ecells[i].length; j++) {
-        let inter : vec2 = e.intersectEdge(this.ecells[i][j]);
-        if(inter != undefined && this.getNodeAtPos(inter) == undefined) {
-          let n : Node = new Node(inter, this.nCounter);
-          this.nCounter++;
+      let cellNum : number = interCells[i];
+      let cellEdges : Array<Edge> = this.ecells[cellNum];
+
+      for(let j = 0; j < cellEdges.length; j++) {
+        let currEdge : Edge = cellEdges[j];
+        if(e.id == cellEdges[j].id) {
+          continue;
+        }
+
+        let jEndpoint1 = this.getNodeAtPos(cellEdges[j].endpoint1);
+
+        let inter : vec2 = e.intersectEdge(cellEdges[j]);
+        if(inter != undefined) {
+          let interNode = this.getNodeAtPos(inter);
+          if(interNode == undefined) {
+            interNode = new Node(inter, this.nCounter);
+            this.sortNode(interNode);
+          }
+
+          if(interNode.distanceFrom(e.endpoint1) < 1 || interNode.id == nodeId) {
+            continue;
+          }
+
+          if(interNode.distanceFrom(e.endpoint1) < closestMidDistance) {
+            closestMid = interNode;
+            closestMidDistance = interNode.distanceFrom(e.endpoint1);
+          }
         }
       }
     }
 
-    return e.getLength() >= this.hSegLengthMin; return true;
+    if(closestMid != undefined && closestMidDistance > 1) {
+        vec2.copy(e.endpoint2, closestMid.getPosition());
+        keepExpanding = false;
+    }
+
+    return keepExpanding;
+  }  
+
+
+  // Search for the Node closest to the new endpoint;
+  // if it falls within a small radius, snap
+  // the edge to that node.
+  private adjustForEnd(e: Edge) : boolean {
+    let keepExpanding : boolean = true;
+
+    let endCellCoords : vec2 = vec2.fromValues(this.getPosRowNumber(e.endpoint2),
+                                               this.getPosColNumber(e.endpoint2));
+
+    let closestEnd : Node = undefined;
+    let closestEndDistance : number = Math.max(this.citySize[0], this.citySize[1]);
+
+    for(let i = -1; i <= 1; i++) {
+      for(let j = -1; j <= 1; j++) {
+        let currCellNum : number = this.getCellNumberFromRowCol(endCellCoords[0] + j,
+                                                                endCellCoords[1] + i);
+        if(currCellNum == undefined) {
+          continue;
+        }
+
+        for(let i = 0; i < this.ncells[currCellNum].length; i++) {
+          if(this.ncells[currCellNum][i].distanceFrom(e.endpoint2) < closestEndDistance - 1) {
+            closestEnd = this.ncells[currCellNum][i];
+            closestEndDistance = this.ncells[currCellNum][i].distanceFrom(e.endpoint2);
+          }
+        }
+      }
+    }
+
+    let threshold : number = this.gridWidth;
+
+    if(e.highway) {
+      threshold = this.hSegLength / 6;
+    }
+
+    if(closestEnd != undefined && closestEndDistance < threshold) {
+        vec2.copy(e.endpoint2, closestEnd.getPosition());
+        keepExpanding = false;
+    }
+
+    return true;//keepExpanding;
+  }
+
+  private adjustForNearbyRoads(e: Edge) : boolean {
+    return this.adjustForIntersection(e) && this.adjustForEnd(e);
   }  
 }

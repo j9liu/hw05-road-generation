@@ -22,7 +22,7 @@ class Turtle {
 
   rotate(deg: number) {
     let transform : mat3 = mat3.create();
-    mat3.rotate(transform, transform, deg * 0.01745329251);
+    mat3.rotate(transform, transform, deg * Math.PI / 180);
     vec2.transformMat3(this.orientation, this.orientation, transform);
   }
 

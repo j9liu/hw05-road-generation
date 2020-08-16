@@ -10,6 +10,7 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import RoadGenerator from './road/RoadGenerator';
 import Edge from './road/Edge';
+//import {testRoadGenerator} from './test';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -19,18 +20,24 @@ const controls = {
   waterLevel: 0.5,
   startPositionX: 73.4075,
   startPositionY: 22.76785,
-  randomStartPos: false,
-  'Generate': loadScene
+  useMyStartPos: false,
+  gridAngle: 22.5,
+  showGridAngleHelp: false,
+  'Generate New': loadScene
 };
 
 let square: Square,
     screenQuad: ScreenQuad,
     circle: Circle,
+    gridHelperLines: Square,
+    gridHelperCircle: Circle,
     time: number = 0.0,
     cityHeight: number = 512, // the width will scale based on window's aspect ratio.
     gridHeight: number = 8,
     aspectRatio: number = window.innerWidth / window.innerHeight,
-    rgen: RoadGenerator;
+    rgen: RoadGenerator,
+    startPosXControl: any,
+    startPosYControl: any;
 
 /* *******************
  * RENDERING FUNCTIONS
@@ -47,6 +54,10 @@ function createMeshes() {
   screenQuad.create();
   circle = new Circle();
   circle.create();
+  gridHelperLines = new Square();
+  gridHelperLines.create();
+  gridHelperCircle = new Circle();
+  gridHelperCircle.create();
 }
 
 function renderEdge(e: Edge) {
@@ -55,7 +66,7 @@ function renderEdge(e: Edge) {
   let color : vec4 = vec4.fromValues(80. / 255., 80. / 255., 80. / 255., 1.);
   if(e.highway) {
     scale[1] = 3.;
-    color = vec4.fromValues(25. / 255., 25. / 225., 24. / 255., 1.);
+    color = vec4.fromValues(25. / 255., 25. / 225., 25. / 255., 1.);
   }
 
   let angle : number = Math.atan2(e.endpoint2[1] - e.endpoint1[1],
@@ -90,9 +101,8 @@ function updateCircle() {
 
   mat3.fromScaling(circleScaleMat, vec2.fromValues(3, 3));
 
-  mat3.fromTranslation(circleTranslateMat, rgen.startPos);
-  //mat3.fromTranslation(circleTranslateMat, vec2.fromValues(controls.startPositionX,
-                                                           //controls.startPositionY));
+  mat3.fromTranslation(circleTranslateMat, vec2.fromValues(controls.startPositionX,
+                                                           controls.startPositionY));
   mat3.multiply(circleTransform, circleTranslateMat, circleScaleMat);
 
   let circleCol1Array : Array<number> = [],
@@ -112,13 +122,134 @@ function updateCircle() {
   circle.setNumInstances(1);
 }
 
+function createGridHelperCircle() {
+
+  let GHCCol1Array : Array<number> = [],
+      GHCCol2Array : Array<number> = [],
+      GHCCol3Array : Array<number> = [];
+
+  let blackTransform : mat3 = mat3.create(),
+      blackScaleMat : mat3 = mat3.create();
+
+  let whiteTransform : mat3 = mat3.create(),
+      whiteScaleMat : mat3 = mat3.create(),
+      ghcTranslateMat : mat3 = mat3.create();
+
+  mat3.fromScaling(blackScaleMat, vec2.fromValues(31, 31));
+  mat3.fromScaling(whiteScaleMat, vec2.fromValues(30, 30));
+
+  mat3.fromTranslation(ghcTranslateMat,
+                       vec2.fromValues(cityHeight * aspectRatio - 35,
+                                        35));
+  mat3.multiply(blackTransform, ghcTranslateMat, blackScaleMat);
+  mat3.multiply(whiteTransform, ghcTranslateMat, whiteScaleMat);
+
+  for(let j = 0; j < 3; j++) {
+    GHCCol1Array.push(blackTransform[j]);
+    GHCCol2Array.push(blackTransform[3 + j]);
+    GHCCol3Array.push(blackTransform[6 + j]);
+  }
+
+  for(let j = 0; j < 3; j++) {
+    GHCCol1Array.push(whiteTransform[j]);
+    GHCCol2Array.push(whiteTransform[3 + j]);
+    GHCCol3Array.push(whiteTransform[6 + j]);
+  }
+
+  gridHelperCircle.setInstanceVBOs(new Float32Array(GHCCol1Array),
+                                   new Float32Array(GHCCol2Array),
+                                   new Float32Array(GHCCol3Array),
+                                   new Float32Array([0.0, 0.0, 0.0, 1.0,
+                                                     1.0, 1.0, 1.0, 1.0]));
+}
+
+function updateGridHelperLines() {
+  let GHLCol1Array : Array<number> = [],
+      GHLCol2Array : Array<number> = [],
+      GHLCol3Array : Array<number>  = [];
+
+  let bigLineScale : vec2 = vec2.fromValues(50, 3);
+  let smallLineScale : vec2 = vec2.fromValues(50, 1.5);
+
+  let lightgray : number = 80. / 255.;
+
+  let perpAngle : number = controls.gridAngle + 90;
+
+  let bigTransform : mat3 = mat3.create(),
+      bigScaleMat : mat3 = mat3.create(),
+      bigRotateMat : mat3 = mat3.create();
+
+  let smallTransform : mat3 = mat3.create(),
+      smallScaleMat : mat3 = mat3.create(),
+      smallRotateMat : mat3 = mat3.create();
+
+  let ghlTranslateMat : mat3 = mat3.create();
+
+
+  mat3.fromTranslation(ghlTranslateMat,
+                       vec2.fromValues(cityHeight * aspectRatio - 35, 35));
+
+  mat3.fromScaling(bigScaleMat, bigLineScale);
+  mat3.fromRotation(bigRotateMat, controls.gridAngle * Math.PI / 180);
+  mat3.multiply(bigTransform, bigRotateMat, bigScaleMat);
+  mat3.multiply(bigTransform, ghlTranslateMat, bigTransform);
+
+  mat3.fromScaling(smallScaleMat, smallLineScale);
+  mat3.fromRotation(smallRotateMat, perpAngle * Math.PI / 180);
+  mat3.multiply(smallTransform, smallRotateMat, smallScaleMat);
+  mat3.multiply(smallTransform, ghlTranslateMat, smallTransform);
+
+  for(let j = 0; j < 3; j++) {
+    GHLCol1Array.push(smallTransform[j]);
+    GHLCol2Array.push(smallTransform[3 + j]);
+    GHLCol3Array.push(smallTransform[6 + j]);
+  }
+
+  for(let j = 0; j < 3; j++) {
+    GHLCol1Array.push(bigTransform[j]);
+    GHLCol2Array.push(bigTransform[3 + j]);
+    GHLCol3Array.push(bigTransform[6 + j]);
+  }
+
+  gridHelperLines.setInstanceVBOs(new Float32Array(GHLCol1Array),
+                                  new Float32Array(GHLCol2Array),
+                                  new Float32Array(GHLCol3Array),
+                                  new Float32Array([lightgray, lightgray, lightgray, 1.0,
+                                                    0, 0, 0, 1.0]));
+}
+
+function showGridHelper() {
+  updateGridHelperLines();
+  gridHelperLines.setNumInstances(2);
+  gridHelperCircle.setNumInstances(2);
+
+
+}
+
+function hideGridHelper() {
+  gridHelperLines.setNumInstances(0);
+  gridHelperCircle.setNumInstances(0);
+}
+
 function loadScene() {
   roadTCol1Array = [],  
   roadTCol2Array = [],
   roadTCol3Array = [],
   roadColorsArray = [];
 
+  rgen.setUseMyStartPos(controls.useMyStartPos);
+  if(controls.useMyStartPos) {
+    rgen.startPos[0] = controls.startPositionX;
+    rgen.startPos[1] = controls.startPositionY;
+  }
+
   rgen.setWaterLevel(controls.waterLevel);
+  rgen.setGridAngle(controls.gridAngle);
+  rgen.reset();
+  controls.startPositionX = rgen.startPos[0];
+  controls.startPositionY = rgen.startPos[1];
+  startPosXControl.updateDisplay();
+  startPosYControl.updateDisplay();
   rgen.generateRoads();
   let mroads : Array<Edge> = rgen.getMainRoads();
   let sroads : Array<Edge> = rgen.getSmallRoads();
@@ -155,10 +286,14 @@ function main() {
   dataFolder.add(controls, 'displayElevation');
   dataFolder.add(controls, 'displayPopDensity');
   dataFolder.add(controls, 'waterLevel', 0, 1.5).step(0.2);
-  gui.add(controls, 'startPositionX', 0, cityHeight * aspectRatio).step(25);
-  gui.add(controls, 'startPositionY', 0, cityHeight).step(25);
-  gui.add(controls, 'randomStartPos');
-  gui.add(controls, 'Generate');
+  startPosXControl = gui.add(controls, 'startPositionX', 0,
+                             cityHeight * aspectRatio).step(25);
+  startPosYControl = gui.add(controls, 'startPositionY', 0,
+                             cityHeight).step(25);
+  gui.add(controls, 'useMyStartPos');
+  gui.add(controls, 'gridAngle', 0, 45).step(5);
+  gui.add(controls, 'showGridAngleHelp');
+  gui.add(controls, 'Generate New');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -172,6 +307,7 @@ function main() {
 
   // Create meshes
   createMeshes();
+  createGridHelperCircle();
 
   const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
 
@@ -255,7 +391,6 @@ function main() {
       gridDimensions : vec2 = vec2.fromValues(Math.floor(aspectRatio * gridHeight), gridHeight);
 
   rgen = new RoadGenerator(cityDimensions, gridDimensions);
-  rgen.setWaterLevel(controls.waterLevel);
   rgen.setData(pixelData, vec2.fromValues(t_width, t_height));
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -272,6 +407,12 @@ function main() {
     instancedShader.setTime(time);
     data.setTime(time++);
     updateCircle();
+    if(controls.showGridAngleHelp) {
+      showGridHelper();
+    } else {
+      hideGridHelper();
+    }
+
     // Clear frame buffer (render to canvas)
     //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -279,12 +420,9 @@ function main() {
     renderer.render(camera, flat, [screenQuad], proj2D,
                     controls.displayElevation, controls.displayPopDensity, controls.waterLevel);
     renderer.render(camera, instancedShader, [
-      square
+      square, circle, gridHelperCircle, gridHelperLines
     ], proj2D, false, false, 0);
 
-    renderer.render(camera, instancedShader, [
-      circle
-    ], proj2D, false, false, 0);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

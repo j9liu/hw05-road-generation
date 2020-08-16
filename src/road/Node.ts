@@ -7,8 +7,10 @@ export default class Node {
   id: number;
 
   constructor(pos: vec2, i: number) {
-    this.x = pos[0];
-    this.y = pos[1];
+    let copy : vec2 = vec2.create();
+    vec2.copy(copy, pos);
+    this.x = copy[0];
+    this.y = copy[1];
     this.id = i;
   }
 
