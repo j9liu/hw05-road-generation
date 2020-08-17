@@ -100,3 +100,5 @@ The `Turtle` depth value
 
 Roads are visualized simply with a flat rectangle that gets projected directly to the screen. The road generator creates its own projection matrix to transform the network cityspace coordinates (from (0, 0) and (width, height)) to screen coordinates (from (-1, -1) and (1, 1)), such that they can be displayed in a 2D view as shown. Highways are thicker and darker in color, while smaller roads are thinner and lighter.   // Main roads are highways while small roads are streets.
   // They are separated so that they can be rendered with different colors and sizes
+
+# Future Improvements

@@ -6,6 +6,7 @@ export default class Edge {
   endpoint2 : vec2 = vec2.create();
   id : number;
   highway : boolean;
+  expandable: boolean = true;
 
   constructor(end1: vec2, end2: vec2, i: number, h: boolean) {
   	vec2.copy(this.endpoint1, end1);
@@ -152,5 +153,9 @@ export default class Edge {
            || this.intersectSegment(vec2.fromValues(cornerbl[0], cornertr[1]), cornertr) != undefined
            || this.intersectSegment(cornertr, vec2.fromValues(cornertr[0], cornerbl[1])) != undefined
            || this.intersectSegment(vec2.fromValues(cornertr[0], cornerbl[1]), cornerbl) != undefined;
+  }
+
+  setExpandable(val: boolean) {
+    this.expandable = val;
   }
 }

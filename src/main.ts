@@ -20,8 +20,10 @@ const controls = {
   waterLevel: 0.5,
   startPositionX: 73.4075,
   startPositionY: 22.76785,
-  useMyStartPos: false,
-  gridAngle: 22.5,
+  lockStartPos: false,
+  useRandomness: true,
+  maxIterations: 20,
+  globalGridAngle: 22.5,
   showGridAngleHelp: false,
   'Generate New': loadScene
 };
@@ -173,7 +175,7 @@ function updateGridHelperLines() {
 
   let lightgray : number = 80. / 255.;
 
-  let perpAngle : number = controls.gridAngle + 90;
+  let perpAngle : number = controls.globalGridAngle + 90;
 
   let bigTransform : mat3 = mat3.create(),
       bigScaleMat : mat3 = mat3.create(),
@@ -190,7 +192,7 @@ function updateGridHelperLines() {
                        vec2.fromValues(cityHeight * aspectRatio - 35, 35));
 
   mat3.fromScaling(bigScaleMat, bigLineScale);
-  mat3.fromRotation(bigRotateMat, controls.gridAngle * Math.PI / 180);
+  mat3.fromRotation(bigRotateMat, controls.globalGridAngle * Math.PI / 180);
   mat3.multiply(bigTransform, bigRotateMat, bigScaleMat);
   mat3.multiply(bigTransform, ghlTranslateMat, bigTransform);
 
@@ -237,14 +239,16 @@ function loadScene() {
   roadTCol3Array = [],
   roadColorsArray = [];
 
-  rgen.setUseMyStartPos(controls.useMyStartPos);
-  if(controls.useMyStartPos) {
+  rgen.setUseMyStartPos(controls.lockStartPos);
+  if(controls.lockStartPos) {
     rgen.startPos[0] = controls.startPositionX;
     rgen.startPos[1] = controls.startPositionY;
   }
 
   rgen.setWaterLevel(controls.waterLevel);
-  rgen.setGridAngle(controls.gridAngle);
+  rgen.setUseRandomness(controls.useRandomness);
+  rgen.setMaxGridIterations(controls.maxIterations);
+  rgen.setGlobalGridAngle(controls.globalGridAngle);
   rgen.reset();
   controls.startPositionX = rgen.startPos[0];
   controls.startPositionY = rgen.startPos[1];
@@ -286,13 +290,17 @@ function main() {
   dataFolder.add(controls, 'displayElevation');
   dataFolder.add(controls, 'displayPopDensity');
   dataFolder.add(controls, 'waterLevel', 0, 1.5).step(0.2);
-  startPosXControl = gui.add(controls, 'startPositionX', 0,
+  const gridFolder = gui.addFolder("Grid Variables");
+  gridFolder.add(controls, 'useRandomness');
+  gridFolder.add(controls, 'maxIterations', 5, 25).step(1);
+  gridFolder.add(controls, 'globalGridAngle', 0, 45).step(5);
+  gridFolder.add(controls, 'showGridAngleHelp');
+  const startFolder = gui.addFolder("Adjust Starting Position");
+  startPosXControl = startFolder.add(controls, 'startPositionX', 0,
                              cityHeight * aspectRatio).step(25);
-  startPosYControl = gui.add(controls, 'startPositionY', 0,
+  startPosYControl = startFolder.add(controls, 'startPositionY', 0,
                              cityHeight).step(25);
-  gui.add(controls, 'useMyStartPos');
-  gui.add(controls, 'gridAngle', 0, 45).step(5);
-  gui.add(controls, 'showGridAngleHelp');
+  startFolder.add(controls, 'lockStartPos');
   gui.add(controls, 'Generate New');
 
   // get canvas and webgl context
