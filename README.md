@@ -49,7 +49,7 @@ The generator also operates on a grid-cell system for storing relevant informati
 
 The grid system is illustrated below:
 
-![](grid.png)
+![](citygrid.png)
 
 Cells are numbered according to their index in the arrays. Calculating the cell in which a `Node` lies, or the cells that an `Edge` intersects, only requires arithmetic. Thus, storing and retrieving data takes constant time compared to an unorganized list of components, which would need to be iterated through completely.
 
