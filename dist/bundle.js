@@ -6044,18 +6044,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
+//import {testRoadGenerator} from './test';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
     displayElevation: false,
-    displayPopDensity: false,
+    displayPopDensity: true,
     waterLevel: 0.5,
-    branchThreshold: 45,
-    maxHighwayLength: 200,
-    'Generate': loadScene
+    startPositionX: 73.4075,
+    startPositionY: 22.76785,
+    lockStartPos: false,
+    useRandomness: true,
+    maxIterations: 20,
+    globalGridAngle: 22.5,
+    showGridAngleHelp: false,
+    'Generate New': loadScene
 };
-let square, screenQuad, circle, time = 0.0, cityHeight = 512, // the width will scale based on window's aspect ratio.
-gridHeight = 8, aspectRatio = window.innerWidth / window.innerHeight, rgen;
+let square, screenQuad, circle, gridHelperLines, gridHelperCircle, time = 0.0, cityHeight = 512, // the width will scale based on window's aspect ratio.
+gridHeight = 8, aspectRatio = window.innerWidth / window.innerHeight, rgen, startPosXControl, startPosYControl;
 /* *******************
  * RENDERING FUNCTIONS
  * ******************* */
@@ -6067,6 +6073,10 @@ function createMeshes() {
     screenQuad.create();
     circle = new __WEBPACK_IMPORTED_MODULE_5__geometry_Circle__["a" /* default */]();
     circle.create();
+    gridHelperLines = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
+    gridHelperLines.create();
+    gridHelperCircle = new __WEBPACK_IMPORTED_MODULE_5__geometry_Circle__["a" /* default */]();
+    gridHelperCircle.create();
 }
 function renderEdge(e) {
     let midpoint = e.getMidpoint();
@@ -6074,7 +6084,7 @@ function renderEdge(e) {
     let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(80. / 255., 80. / 255., 80. / 255., 1.);
     if (e.highway) {
         scale[1] = 3.;
-        color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(25. / 255., 25. / 225., 24. / 255., 1.);
+        color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(25. / 255., 25. / 225., 25. / 255., 1.);
     }
     let angle = Math.atan2(e.endpoint2[1] - e.endpoint1[1], e.endpoint2[0] - e.endpoint1[0]);
     let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
@@ -6095,12 +6105,103 @@ function renderEdge(e) {
         roadColorsArray.push(color[j]);
     }
 }
+function updateCircle() {
+    let circleTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let circleScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let circleTranslateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(circleScaleMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(3, 3));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(circleTranslateMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(controls.startPositionX, controls.startPositionY));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(circleTransform, circleTranslateMat, circleScaleMat);
+    let circleCol1Array = [], circleCol2Array = [], circleCol3Array = [];
+    for (let j = 0; j < 3; j++) {
+        circleCol1Array.push(circleTransform[j]);
+        circleCol2Array.push(circleTransform[3 + j]);
+        circleCol3Array.push(circleTransform[6 + j]);
+    }
+    circle.setInstanceVBOs(new Float32Array(circleCol1Array), new Float32Array(circleCol2Array), new Float32Array(circleCol3Array), new Float32Array([1.0, 0.0, 0.0, 1.0]));
+    circle.setNumInstances(1);
+}
+function createGridHelperCircle() {
+    let GHCCol1Array = [], GHCCol2Array = [], GHCCol3Array = [];
+    let blackTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), blackScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let whiteTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), whiteScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), ghcTranslateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(blackScaleMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(31, 31));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(whiteScaleMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(30, 30));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(ghcTranslateMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cityHeight * aspectRatio - 35, 35));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(blackTransform, ghcTranslateMat, blackScaleMat);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(whiteTransform, ghcTranslateMat, whiteScaleMat);
+    for (let j = 0; j < 3; j++) {
+        GHCCol1Array.push(blackTransform[j]);
+        GHCCol2Array.push(blackTransform[3 + j]);
+        GHCCol3Array.push(blackTransform[6 + j]);
+    }
+    for (let j = 0; j < 3; j++) {
+        GHCCol1Array.push(whiteTransform[j]);
+        GHCCol2Array.push(whiteTransform[3 + j]);
+        GHCCol3Array.push(whiteTransform[6 + j]);
+    }
+    gridHelperCircle.setInstanceVBOs(new Float32Array(GHCCol1Array), new Float32Array(GHCCol2Array), new Float32Array(GHCCol3Array), new Float32Array([0.0, 0.0, 0.0, 1.0,
+        1.0, 1.0, 1.0, 1.0]));
+}
+function updateGridHelperLines() {
+    let GHLCol1Array = [], GHLCol2Array = [], GHLCol3Array = [];
+    let bigLineScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(50, 3);
+    let smallLineScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(50, 1.5);
+    let lightgray = 80. / 255.;
+    let perpAngle = controls.globalGridAngle + 90;
+    let bigTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), bigScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), bigRotateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let smallTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), smallScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create(), smallRotateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    let ghlTranslateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(ghlTranslateMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cityHeight * aspectRatio - 35, 35));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(bigScaleMat, bigLineScale);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromRotation(bigRotateMat, controls.globalGridAngle * Math.PI / 180);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(bigTransform, bigRotateMat, bigScaleMat);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(bigTransform, ghlTranslateMat, bigTransform);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(smallScaleMat, smallLineScale);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromRotation(smallRotateMat, perpAngle * Math.PI / 180);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(smallTransform, smallRotateMat, smallScaleMat);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(smallTransform, ghlTranslateMat, smallTransform);
+    for (let j = 0; j < 3; j++) {
+        GHLCol1Array.push(smallTransform[j]);
+        GHLCol2Array.push(smallTransform[3 + j]);
+        GHLCol3Array.push(smallTransform[6 + j]);
+    }
+    for (let j = 0; j < 3; j++) {
+        GHLCol1Array.push(bigTransform[j]);
+        GHLCol2Array.push(bigTransform[3 + j]);
+        GHLCol3Array.push(bigTransform[6 + j]);
+    }
+    gridHelperLines.setInstanceVBOs(new Float32Array(GHLCol1Array), new Float32Array(GHLCol2Array), new Float32Array(GHLCol3Array), new Float32Array([lightgray, lightgray, lightgray, 1.0,
+        0, 0, 0, 1.0]));
+}
+function showGridHelper() {
+    updateGridHelperLines();
+    gridHelperLines.setNumInstances(2);
+    gridHelperCircle.setNumInstances(2);
+}
+function hideGridHelper() {
+    gridHelperLines.setNumInstances(0);
+    gridHelperCircle.setNumInstances(0);
+}
 function loadScene() {
     roadTCol1Array = [],
         roadTCol2Array = [],
         roadTCol3Array = [],
         roadColorsArray = [];
+    rgen.setUseMyStartPos(controls.lockStartPos);
+    if (controls.lockStartPos) {
+        rgen.startPos[0] = controls.startPositionX;
+        rgen.startPos[1] = controls.startPositionY;
+    }
     rgen.setWaterLevel(controls.waterLevel);
+    rgen.setUseRandomness(controls.useRandomness);
+    rgen.setMaxGridIterations(controls.maxIterations);
+    rgen.setGlobalGridAngle(controls.globalGridAngle);
+    rgen.reset();
+    controls.startPositionX = rgen.startPos[0];
+    controls.startPositionY = rgen.startPos[1];
+    startPosXControl.updateDisplay();
+    startPosYControl.updateDisplay();
     rgen.generateRoads();
     let mroads = rgen.getMainRoads();
     let sroads = rgen.getSmallRoads();
@@ -6113,20 +6214,7 @@ function loadScene() {
     }
     square.setInstanceVBOs(new Float32Array(roadTCol1Array), new Float32Array(roadTCol2Array), new Float32Array(roadTCol3Array), new Float32Array(roadColorsArray));
     square.setNumInstances(mroads.length + sroads.length);
-    let circleTransform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-    let circleScaleMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-    let circleTranslateMat = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromScaling(circleScaleMat, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(3, 3));
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromTranslation(circleTranslateMat, rgen.startPos);
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].multiply(circleTransform, circleTranslateMat, circleScaleMat);
-    let circleCol1Array = [], circleCol2Array = [], circleCol3Array = [];
-    for (let j = 0; j < 3; j++) {
-        circleCol1Array.push(circleTransform[j]);
-        circleCol2Array.push(circleTransform[3 + j]);
-        circleCol3Array.push(circleTransform[6 + j]);
-    }
-    circle.setInstanceVBOs(new Float32Array(circleCol1Array), new Float32Array(circleCol2Array), new Float32Array(circleCol3Array), new Float32Array([1.0, 0.0, 0.0, 1.0]));
-    circle.setNumInstances(1);
+    updateCircle();
 }
 function main() {
     // Initial display for framerate
@@ -6138,12 +6226,20 @@ function main() {
     document.body.appendChild(stats.domElement);
     // Add controls to the gui
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
-    gui.add(controls, 'displayElevation');
-    gui.add(controls, 'displayPopDensity');
-    gui.add(controls, 'waterLevel', 0, 2.5).step(0.2);
-    gui.add(controls, 'branchThreshold', 15, 60).step(5);
-    gui.add(controls, 'maxHighwayLength', 50, 400).step(25);
-    gui.add(controls, 'Generate');
+    const dataFolder = gui.addFolder("Data Variables");
+    dataFolder.add(controls, 'displayElevation');
+    dataFolder.add(controls, 'displayPopDensity');
+    dataFolder.add(controls, 'waterLevel', 0, 1.5).step(0.2);
+    const gridFolder = gui.addFolder("Grid Variables");
+    gridFolder.add(controls, 'useRandomness');
+    gridFolder.add(controls, 'maxIterations', 5, 25).step(1);
+    gridFolder.add(controls, 'globalGridAngle', 0, 45).step(5);
+    gridFolder.add(controls, 'showGridAngleHelp');
+    const startFolder = gui.addFolder("Adjust Starting Position");
+    startPosXControl = startFolder.add(controls, 'startPositionX', 0, cityHeight * aspectRatio).step(25);
+    startPosYControl = startFolder.add(controls, 'startPositionY', 0, cityHeight).step(25);
+    startFolder.add(controls, 'lockStartPos');
+    gui.add(controls, 'Generate New');
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl2');
@@ -6155,6 +6251,7 @@ function main() {
     Object(__WEBPACK_IMPORTED_MODULE_8__globals__["b" /* setGL */])(gl);
     // Create meshes
     createMeshes();
+    createGridHelperCircle();
     const camera = new __WEBPACK_IMPORTED_MODULE_7__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 10), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(50, 50, 0));
     const renderer = new __WEBPACK_IMPORTED_MODULE_6__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
     renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -6216,29 +6313,32 @@ function main() {
     // Calculate grid based on window dimensions
     let cityDimensions = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.floor(aspectRatio * cityHeight), cityHeight), gridDimensions = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.floor(aspectRatio * gridHeight), gridHeight);
     rgen = new __WEBPACK_IMPORTED_MODULE_10__road_RoadGenerator__["a" /* default */](cityDimensions, gridDimensions);
-    rgen.setWaterLevel(controls.waterLevel);
     rgen.setData(pixelData, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t_width, t_height));
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // Initial call to load scene
-    //loadScene();
+    loadScene();
     // This function will be called every frame
     function tick() {
         camera.update();
         stats.begin();
         instancedShader.setTime(time);
         data.setTime(time++);
+        updateCircle();
+        if (controls.showGridAngleHelp) {
+            showGridHelper();
+        }
+        else {
+            hideGridHelper();
+        }
         // Clear frame buffer (render to canvas)
         //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.clear();
         renderer.render(camera, flat, [screenQuad], proj2D, controls.displayElevation, controls.displayPopDensity, controls.waterLevel);
         renderer.render(camera, instancedShader, [
-            square
-        ], proj2D, false, false, 0);
-        renderer.render(camera, instancedShader, [
-            circle
+            square, circle, gridHelperCircle, gridHelperLines
         ], proj2D, false, false, 0);
         stats.end();
         // Tell the browser to call `tick` again whenever it renders a new frame
@@ -16812,20 +16912,27 @@ class ShaderProgram {
 
 class RoadGenerator {
     constructor(cs, gs) {
-        this.startPosLocked = false;
+        this.useMyStartPos = false;
         // Highway variables
-        this.searchRadius = 300;
+        this.searchRadius = 100;
         this.searchAngle = 90;
-        this.searchSteps = 5;
-        this.branchThreshold = 30;
-        this.hSegLengthMax = 100;
-        this.hSegLengthMin = 30;
-        this.branchFreq = -3;
-        this.maxBlocks = 20;
+        this.searchSteps = 6;
+        this.branchThreshold = 45;
+        this.hSegLength = 100;
+        this.maxBlocks = 30;
+        this.gridLength = 20;
+        this.gridWidth = 10;
+        this.useRandomness = true;
+        this.maxGridIterations = 20;
+        this.globalGridAngle = 0;
         this.globalDirection = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1.0, 0);
-        this.nodeEpsilon = 0.1;
+        this.nodeEpsilon = 2;
         this.nCounter = 0;
         this.eCounter = 0;
+        // Pixel data that is rendered in the frame buffer
+        // and passed into the generator.
+        this.data = undefined;
+        this.dataSize = undefined;
         this.citySize = cs;
         this.gridSize = gs;
     }
@@ -16834,9 +16941,21 @@ class RoadGenerator {
         this.dataSize = ds;
         this.reset();
     }
-    setStartPos(sp, lock) {
-        this.startPos = sp;
-        this.startPosLocked = lock;
+    setStartPos(sp) {
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.startPos, sp);
+    }
+    setUseMyStartPos(lock) {
+        this.useMyStartPos = lock;
+    }
+    setUseRandomness(val) {
+        this.useRandomness = val;
+    }
+    setMaxGridIterations(val) {
+        this.maxGridIterations = val;
+    }
+    setGlobalGridAngle(angle) {
+        this.globalGridAngle = angle;
+        this.globalDirection = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.cosDeg(angle), this.sinDeg(angle));
     }
     // Gets the green component of the image
     getElevation(point) {
@@ -16870,31 +16989,37 @@ class RoadGenerator {
         this.smallRoads = [];
         this.turtles = [];
         this.turtlesToAdd = [];
-        this.highwayTurtles = [];
-        // bias it properly
-        if (!this.startPosLocked) {
+        this.gridTurtles = [];
+        if (this.data == undefined) {
+            return;
+        }
+        // Bias the random point towards the edges.
+        if (!this.useMyStartPos) {
             do {
-                let xValue = Math.random() * 0.1 * this.citySize[0], yValue = Math.random() * 0.1 * this.citySize[1];
+                let xValue = Math.random() * 0.09 * this.citySize[0]
+                    + 0.01 * this.citySize[0], yValue = Math.random() * 0.09 * this.citySize[1]
+                    + 0.01 * this.citySize[1];
                 if (Math.random() <= 0.5) {
-                    xValue += 0.9 * this.citySize[0];
+                    xValue += 0.90 * this.citySize[0];
                 }
                 if (Math.random() <= 0.5) {
-                    yValue += 0.9 * this.citySize[1];
+                    yValue += 0.90 * this.citySize[1];
                 }
                 this.startPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(xValue, yValue);
             } while (this.getElevation(this.startPos) <= this.waterLevel);
-            console.log(this.startPos);
         }
-        // Based on the random position, attempt to make the Turtle face the direction with the most
-        // promising population density
+        // Based on the position, attempt to make Turtle face
+        // the direction with the most promising population density,
+        // as long as it points in a general direction towards the center of the map.
         let rotation = 0;
         let maxWeight = -1;
-        for (let i = -120; i <= 120; i += 30) {
+        for (let i = -360; i <= 360; i += 30) {
             let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](this.startPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, 0), 0);
             tempTurtle.rotate(i);
             let weight = 0;
             tempTurtle.moveForward(this.cellWidth);
-            if (this.getElevation(tempTurtle.position) > this.waterLevel) {
+            if (this.getElevation(tempTurtle.position) > this.waterLevel &&
+                !this.outOfBounds(tempTurtle.position)) {
                 weight = this.getPopulation(tempTurtle.position);
             }
             if (weight > maxWeight) {
@@ -16902,20 +17027,60 @@ class RoadGenerator {
                 maxWeight = weight;
             }
         }
-        let t = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](this.startPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(Math.cos(rotation), Math.sin(rotation)), -1);
+        let candidate = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.cosDeg(rotation), this.sinDeg(rotation));
+        let turtleToCenter = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.citySize[0] * 0.5 - this.startPos[0], this.citySize[1] * 0.5 - this.startPos[1]);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(turtleToCenter, turtleToCenter);
+        let finalDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        let angle = this.acosDeg(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(candidate, turtleToCenter));
+        if (angle > 90) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(finalDir, turtleToCenter);
+        }
+        else {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(finalDir, candidate);
+        }
+        let t = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](this.startPos, finalDir, -1);
         this.turtles.push(t);
-        this.highwayTurtles.push(t);
+        this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](this.startPos, this.nCounter));
     }
     // Given height and population data, generate a substantial set of roads that covers it
     generateRoads() {
-        let maxIterations = 5;
-        //this.mainRoads.push(new Edge(vec.fromValues(0, 0), citySize, 0, true));
-        //this.branchGrid(this.mainRoads[0]);
-        for (let j = 0; j < maxIterations && this.turtles.length > 0; j++) {
-            // console.log(this.turtles.length);
+        // Hard cap to guarantee that the program ends and won't infinitely loop
+        let maxHWIterations = 20;
+        // First we lay out the highways
+        for (let j = 0; j < maxHWIterations && this.turtles.length > 0; j++) {
             for (let i = 0; i < this.turtles.length; i++) {
-                this.branchRoad(this.turtles[i]);
+                this.branchHighway(this.turtles[i]);
             }
+            let activeTurtles = [];
+            for (let i = 0; i < this.turtles.length; i++) {
+                if (this.drawRoad(this.turtles[i])) {
+                    activeTurtles.push(this.turtles[i]);
+                }
+            }
+            this.turtles = activeTurtles;
+            this.turtles = this.turtles.concat(this.turtlesToAdd);
+            this.turtlesToAdd = [];
+        }
+        this.turtles = [];
+        // Then start to layout first grid roads
+        for (let i = 0; i < this.mainRoads.length; i++) {
+            this.branchGrid(this.mainRoads[i]);
+        }
+        for (let j = 0; j < this.maxGridIterations && this.turtles.length > 0; j++) {
+            let activeTurtles = [];
+            for (let i = 0; i < this.turtles.length; i++) {
+                if (this.drawRoad(this.turtles[i])) {
+                    activeTurtles.push(this.turtles[i]);
+                }
+            }
+            this.turtles = activeTurtles;
+            this.turtles = this.turtles.concat(this.turtlesToAdd);
+            this.turtlesToAdd = [];
+        }
+        // Draw out the second ones
+        this.turtles = [];
+        this.turtles = this.gridTurtles;
+        for (let j = 0; j < this.maxGridIterations && this.turtles.length > 0; j++) {
             let activeTurtles = [];
             for (let i = 0; i < this.turtles.length; i++) {
                 if (this.drawRoad(this.turtles[i])) {
@@ -16945,6 +17110,17 @@ class RoadGenerator {
         return Math.abs(v1[0] - v2[0]) < this.nodeEpsilon
             && Math.abs(v1[1] - v2[1]) < this.nodeEpsilon;
     }
+    cosDeg(deg) {
+        let rad = deg * Math.PI / 180;
+        return Math.cos(rad);
+    }
+    sinDeg(deg) {
+        let rad = deg * Math.PI / 180;
+        return Math.sin(rad);
+    }
+    acosDeg(value) {
+        return Math.acos(value) * 180 / Math.PI;
+    }
     //////////////////////////////////////
     // CELL MANAGEMENT HELPER FUNCTIONS
     //////////////////////////////////////
@@ -16956,7 +17132,10 @@ class RoadGenerator {
     }
     getPosCellNumber(p) {
         let cellx = Math.floor(p[0] / this.cellWidth), celly = Math.floor(p[1] / this.cellWidth);
-        let celln = Math.floor(this.gridSize[0] * celly + cellx);
+        return this.getCellNumberFromRowCol(cellx, celly);
+    }
+    getCellNumberFromRowCol(x, y) {
+        let celln = Math.floor(this.gridSize[0] * y + x);
         if (celln < 0 || celln >= this.gridSize[0] * this.gridSize[1]) {
             return undefined;
         }
@@ -16977,6 +17156,9 @@ class RoadGenerator {
                 return nArray[i];
             }
         }
+        return undefined;
+    }
+    getNodeClosestToPos(pos) {
         return undefined;
     }
     // Given an edge, find all of the cells that it intersects
@@ -17023,6 +17205,7 @@ class RoadGenerator {
             }
         }
         array.push(n);
+        this.nCounter++;
         return true;
     }
     // Given an edge, sort it into the cell map, i.e. find all of the cells
@@ -17035,6 +17218,7 @@ class RoadGenerator {
         for (let i = 0; i < cells.length; i++) {
             this.ecells[cells[i]].push(e);
         }
+        this.eCounter++;
         return true;
     }
     willIntersect(t1, t2) {
@@ -17057,42 +17241,43 @@ class RoadGenerator {
     //////////////////////////////////////
     // ROAD DRAWING & FUNCTIONS
     //////////////////////////////////////
-    branchRoad(t) {
-        if (t.depth < 0) {
-            this.branchHighway(t, this.searchAngle, this.searchRadius);
-        }
-    }
-    // store the distance travelled in the turtle.
     // Rotates the turtle such that it will draw in the direction of the most
     // highly weighted direction above a certain threshold, while generating
-    // a new Turtle if 1. turtle rotates enough off its original course and
-    // 2. the population of the original direction is high enough
-    // Branches the highways if the turtle has travelled more than the radius.
-    // THEN ATTEMPT TO IMPLEMENT INTERSECTION DETECTION
-    branchHighway(t, angle, radius) {
-        // let rotateCurrent: boolean = true;
-        /*
-            let previousRotation : number = 0;
-            for(let i = 0; i < t.angleHistory.length; i++) {
-              previousRotation += t.angleHistory[i];
-            }
-        
-            if(Math.abs(previousRotation) > 120) {
-              rotateCurrent = false;
-            }*/
-        let rotation = -360;
-        let secondRotation = -360;
+    // a new Turtle if either 1. the turtle rotates enough off its original course
+    // and its current route is still strongly populated, or 2. the Turtle can go towards
+    // two population peaks that are spread apart from each other
+    branchHighway(t) {
+        let rotation = 0;
+        let secondRotation = 0;
         let maxWeight = -1;
         let secondMaxWeight = -1;
-        for (let i = -angle / 2; i <= angle / 2; i += angle / 6) {
+        let currentWeight = -1;
+        for (let i = -this.searchAngle / 2; i <= this.searchAngle / 2; i += this.searchAngle / 8) {
             let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](t.position, t.orientation, -1);
             tempTurtle.rotate(i);
             let weight = 0;
             for (let j = 0; j < this.searchSteps; j++) {
-                tempTurtle.moveForward(radius / this.searchSteps);
+                tempTurtle.moveForward(this.searchRadius / this.searchSteps);
+                if (this.outOfBounds(tempTurtle.position)) {
+                    break;
+                }
                 if (this.getElevation(tempTurtle.position) > this.waterLevel) {
                     weight += this.getPopulation(tempTurtle.position)
                         / __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(tempTurtle.position, t.position);
+                }
+            }
+            // extended search for current road
+            if (Math.abs(i) < 0.1) {
+                currentWeight = weight;
+                for (let j = 0; j < this.searchSteps / 2; j++) {
+                    tempTurtle.moveForward(this.searchRadius / (4 * this.searchSteps));
+                    if (this.outOfBounds(tempTurtle.position)) {
+                        break;
+                    }
+                    if (this.getElevation(tempTurtle.position) > this.waterLevel) {
+                        currentWeight += this.getPopulation(tempTurtle.position)
+                            / __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].distance(tempTurtle.position, t.position);
+                    }
                 }
             }
             if (weight > maxWeight) {
@@ -17106,34 +17291,29 @@ class RoadGenerator {
                 secondMaxWeight = weight;
             }
         }
-        /*
-            // scan for nearby turtles
-            for(let i = 0; i < this.highwayTurtles.length; i++) {
-              if(!this.vec2Equality(t.position, this.highwayTurtles[i].position) &&
-                  vec2.distance(t.position, this.highwayTurtles[i].position) <= this.searchRadius) {
-                // check if their current trajectories are going to intersect
-                if(this.willIntersect(t, this.highwayTurtles[i])) {
-                  this.highwayTurtles[i]
-                }
-              }
-            }*/
-        console.log(this.turtlesToAdd.length);
         let nt = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](t.position, t.orientation, -1);
-        if (Math.abs(rotation) > this.branchThreshold) {
+        // Branch if the threshold is passed & the original direction is promising enough
+        if (Math.abs(rotation) > this.branchThreshold && Math.abs(currentWeight - maxWeight) >
+            Math.abs(currentWeight - secondMaxWeight)) {
             this.turtlesToAdd.push(nt);
         }
-        else if (Math.abs(rotation - secondRotation) > this.branchThreshold * 1.5) {
+        // otherwise try to branch with the two max-weighted directions
+        else if (Math.abs(rotation - secondRotation) > this.branchThreshold) {
             nt.rotate(secondRotation);
             this.turtlesToAdd.push(nt);
         }
-        console.log(this.turtlesToAdd.length);
-        t.rotate(rotation);
+        if (Math.abs(t.rotationTotal + rotation) < 150) {
+            t.rotate(rotation);
+            t.rotationTotal += rotation;
+        }
     }
     branchGrid(e) {
         // We use the Turtle "depth" to store numbers 
         let minLength = 10;
-        let stepLength = Math.max(minLength, e.getLength() / this.maxBlocks);
-        let maxSteps = Math.floor(e.getLength() / stepLength);
+        let maxSteps = Math.floor(e.getLength() / this.gridLength);
+        if (e.getLength() / this.gridLength - maxSteps < 0.5) {
+            maxSteps--;
+        }
         let dir = e.getDirectionVector();
         let perpLocal = dir[1] != 0 ? __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(1, -dir[0] / dir[1])
             : __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 1);
@@ -17142,19 +17322,21 @@ class RoadGenerator {
             : __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(0, 1);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpLocal, perpLocal);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].normalize(perpGlobal, perpGlobal);
-        let anglePerp = Math.acos(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(perpLocal, this.globalDirection) /
-            (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(perpLocal) * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(this.globalDirection)));
-        let angleRoadDir = Math.acos(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(dir, this.globalDirection) /
-            (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(dir) * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(this.globalDirection)));
+        // angle between local perpendicular and the global direction
+        let anglePerp = this.acosDeg(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(perpLocal, this.globalDirection));
+        anglePerp = Math.min(anglePerp, 180 - anglePerp);
+        // angle between local direction and the global direction
+        let angleRoadDir = this.acosDeg(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].dot(dir, this.globalDirection));
+        angleRoadDir = Math.min(angleRoadDir, 180 - angleRoadDir);
         // change direction depending on which (if any)
         // of the two directions are closest to direction vector
         let gridDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
         let gridPerpDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        if (anglePerp * 57.2957795 < 15) {
+        if (anglePerp < 45) {
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridDir, this.globalDirection);
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridPerpDir, perpGlobal);
         }
-        else if (angleRoadDir * 57.2957795 < 15) {
+        else if (angleRoadDir < 45) {
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridDir, perpGlobal);
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(gridPerpDir, this.globalDirection);
         }
@@ -17165,14 +17347,21 @@ class RoadGenerator {
         // This turtle marches along the existing highway to spawn grid turtles along the sides
         let tempTurtle = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](e.endpoint1, dir, 0);
         for (let i = 0; i <= maxSteps; i++) {
-            tempTurtle.moveForward(stepLength);
             let t = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](tempTurtle.position, gridDir, 0);
-            t.stepLength = stepLength;
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(t.stepDir, gridPerpDir);
-            this.turtlesToAdd.push(t);
+            this.turtles.push(t);
+            let oppDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(-gridDir[0], -gridDir[1]);
+            let t2 = new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](tempTurtle.position, oppDir, 0);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(t2.stepDir, gridPerpDir);
+            this.turtles.push(t2);
+            this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](tempTurtle.position, this.nCounter));
+            tempTurtle.moveForward(this.gridLength);
         }
     }
     drawRoad(t) {
+        if (this.getNodeAtPos(t.position) == undefined) {
+            this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](t.position, this.nCounter));
+        }
         if (t.depth < 0) {
             return this.drawHighway(t);
         }
@@ -17180,147 +17369,249 @@ class RoadGenerator {
     }
     drawHighway(t) {
         let oldPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]);
-        t.moveForward(this.hSegLengthMin);
-        let endpoint = new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter);
+        t.moveForward(this.hSegLength);
         let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, true);
         if (!this.fixForConstraints(road)) {
             return false;
         }
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(t.position, road.endpoint2);
-        this.nCounter++;
-        this.eCounter++;
         this.sortEdge(road);
-        this.sortNode(endpoint);
+        this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter));
         this.mainRoads.push(road);
-        //this.branchGrid(road);
-        return true;
+        return road.expandable;
     }
     drawGrid(t) {
-        if (t.depth >= this.maxBlocks) {
-            return false;
-        }
         let upRoadDrawn = false;
         let forwardRoadDrawn = false;
         let oldPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]);
-        let oldOri = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.orientation[0], t.orientation[1]);
+        this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter));
+        let keepExpanding = true;
         if (t.depth > 0) {
-            t.setOrientation(t.stepDir);
-            t.moveForward(t.stepLength);
-            let endpoint = new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](oldPos, this.nCounter);
+            t.moveForward(this.gridLength);
             let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, false);
             if (this.fixForConstraints(road)) {
-                this.nCounter++;
-                this.eCounter++;
                 this.sortEdge(road);
-                this.sortNode(endpoint);
+                this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](road.endpoint2, this.nCounter));
                 this.smallRoads.push(road);
                 upRoadDrawn = true;
+                keepExpanding = road.expandable;
             }
-            t.setPosition(oldPos);
-            t.setOrientation(oldOri);
+            if (this.useRandomness && Math.random() < 0.4) {
+                t.rotate(90);
+            }
         }
-        t.moveForward(20);
-        let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, false);
-        if (this.fixForConstraints(road)) {
-            this.eCounter++;
-            this.sortEdge(road);
-            this.smallRoads.push(road);
-            forwardRoadDrawn = true;
-            t.depth++;
+        else {
+            t.moveForward(this.gridWidth);
+            let road = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](oldPos, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(t.position[0], t.position[1]), this.eCounter, false);
+            if (this.fixForConstraints(road)) {
+                t.setPosition(road.endpoint2);
+                this.sortNode(new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](t.position, this.nCounter));
+                this.sortEdge(road);
+                this.smallRoads.push(road);
+                forwardRoadDrawn = true;
+                keepExpanding = keepExpanding && road.expandable;
+            }
+            this.gridTurtles.push(new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](road.endpoint2, t.stepDir, 1));
+            if (this.useRandomness && Math.random() < 0.1) {
+                this.gridTurtles.push(new __WEBPACK_IMPORTED_MODULE_3__Turtle__["a" /* default */](road.endpoint2, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(-t.stepDir[0], -t.stepDir[1]), 1));
+            }
         }
-        return upRoadDrawn || forwardRoadDrawn;
+        return (upRoadDrawn || forwardRoadDrawn) && keepExpanding;
     }
     //////////////////////////////////////
     // ROAD CONSTRAINT HELPER FUNCTIONS
     //////////////////////////////////////
     fixForConstraints(e) {
-        return this.fixForBounds(e); // && this.fixForWater(e);// && this.fixForNearbyRoads(e);
+        return this.fixForBounds(e) && this.fixForWater(e) && this.fixForNearbyRoads(e);
     }
     fixForBounds(e) {
-        if (this.outOfBounds(e.endpoint2)) {
-            // try to shorten
+        if (this.outOfBounds(e.endpoint1)) {
             return false;
         }
-        return true;
+        if (!this.outOfBounds(e.endpoint2)) {
+            return true;
+        }
+        let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create(), increment = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(temp, e.endpoint2);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, e.getDirectionVector(), e.getLength() / 4);
+        for (let i = 0; i < 4; i++) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(temp, temp, increment);
+            if (!this.outOfBounds(temp)) {
+                // stretch it so it goes off screen (for aesthetic)
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, temp, increment);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
+                return true;
+            }
+        }
+        return false;
     }
     // Checks if the edge goes into the water and tries to adjust the endpoints'
     // positions accordingly. If the resulting edge can fit on land or is long enough
     // to be a worthwhile road, return true; else, return false.
     fixForWater(e) {
-        // Test if the newest endpoint is in the water.
-        if (this.getElevation(e.endpoint2) > this.waterLevel) {
-            return true;
-        }
-        // If the road is a highway, we can try to extend it to an island within reach,
-        // as long as it is under the maximum highway length. Otherwise, we let the
-        // highway dangle, anticipating that it can be shortened back towards land.
+        // If the road is a highway ending in a body of water,
+        // we can try to extend it to a piece of land within reach.
+        // Otherwise, we let the highway dangle, anticipating that it can be shortened
+        // back towards land.
         if (e.highway) {
-            let increment = e.getDirectionVector();
-            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, (this.hSegLengthMax - e.getLength()) / 5);
-            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(increment) < this.cellWidth / 10) {
-                let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(temp, e.endpoint2);
-                for (let i = 0; i < 5; i++) {
-                    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, temp, increment);
-                    if (this.getElevation(temp) >= this.waterLevel) {
-                        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
-                        return true;
+            // Test if the newest endpoint is in the water.
+            if (this.getElevation(e.endpoint2) > this.waterLevel) {
+                return true;
+            }
+            let increment = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, e.getDirectionVector(), this.hSegLength);
+            let temp = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.endpoint2[0], e.endpoint2[1]);
+            for (let i = 0; i < 20; i++) {
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(temp, temp, increment);
+                if (this.outOfBounds(temp)) {
+                    break;
+                }
+                if (this.getElevation(temp) > this.waterLevel) {
+                    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, temp);
+                    return true;
+                }
+            }
+        }
+        // Otherwise, if the road is part of the grid network or is a highway
+        // that cannot be extended, we check if the road at any point
+        // (within reasonable testing) crosses water. If so, we truncate the
+        // road so it's as long as possible before hitting water.
+        let testPoint = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(testPoint, e.endpoint1);
+        let increment = e.getDirectionVector();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, e.getLength() / 10);
+        for (let i = 0; i < 10; i++) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(testPoint, testPoint, increment);
+            if (this.getElevation(testPoint) <= this.waterLevel) {
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(testPoint, testPoint, increment);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, testPoint);
+                break;
+            }
+        }
+        return e.getLength() >= 2 * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].length(increment);
+    }
+    adjustForIntersection(e) {
+        // Add new intersections where the edge intersects other edges;
+        // keep track of the intersection closest to the first endpoint,
+        // then chop the road so it intersects it. This is to ensure
+        // the road doesn't penetrate through others.
+        let nodeId = -1;
+        if (this.getNodeAtPos(e.endpoint1) != undefined) {
+            nodeId = this.getNodeAtPos(e.endpoint1).id;
+        }
+        let closestMid = undefined;
+        let closestMidDistance = Math.max(this.citySize[0], this.citySize[1]);
+        // Get the indices of the cells that the target edge intersects;
+        // we check these for intersections with other edges.
+        let interCells = this.getEdgeCells(e);
+        for (let i = 0; i < interCells.length; i++) {
+            let cellNum = interCells[i];
+            let cellEdges = this.ecells[cellNum];
+            for (let j = 0; j < cellEdges.length; j++) {
+                let currEdge = cellEdges[j];
+                if (e.id == cellEdges[j].id) {
+                    continue;
+                }
+                let inter = e.intersectEdge(cellEdges[j]);
+                if (inter != undefined) {
+                    let interNode = this.getNodeAtPos(inter);
+                    if (interNode == undefined) {
+                        interNode = new __WEBPACK_IMPORTED_MODULE_2__Node__["a" /* default */](inter, this.nCounter);
+                        this.sortNode(interNode);
+                    }
+                    if (interNode.distanceFrom(e.endpoint1) < 1 || interNode.id == nodeId) {
+                        continue;
+                    }
+                    if (interNode.distanceFrom(e.endpoint1) < closestMidDistance) {
+                        closestMid = interNode;
+                        closestMidDistance = interNode.distanceFrom(e.endpoint1);
                     }
                 }
             }
         }
-        // Otherwise, we slowly march the end of the edge back in the direction of the road
-        // until we either find water or reach the start point.
-        let increment = e.getDirectionVector();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(increment, increment, e.getLength() / 10);
-        for (let i = 0; i < 10; i++) {
-            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].subtract(e.endpoint2, e.endpoint2, increment);
-            if (this.getElevation(e.endpoint2) >= this.waterLevel) {
-                break;
+        if (closestMid != undefined) {
+            if (!this.vec2Equality(closestMid.getPosition(), e.endpoint2) && closestMidDistance > 1) {
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, closestMid.getPosition());
+                e.setExpandable(false);
             }
         }
-        return e.getLength() >= this.hSegLengthMin;
+        if (e.highway) {
+            return e.getLength() > this.hSegLength / 8;
+        }
+        return e.getLength() > Math.min(this.gridWidth, this.gridLength) / 3;
     }
-    // Adjusts the road based on the surrounding road network,
-    // adds intersections where necessary. If the resulting edge is long enough
-    // to be a worthwhile road, return true; else, return false.
+    // Try to extend this to be as long as possible, until
+    // it reaches another grid road. If it cannot be extended
+    // to reach another road, just continue to expand with original
+    // length.
+    adjustForLength(e) {
+        if (this.getNodeAtPos(e.endpoint2) != undefined) {
+            return;
+        }
+        let extendRadius = this.gridLength * 1.5;
+        let tempEndpt = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(e.endpoint2[0], e.endpoint2[1]);
+        let tempEndpt2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].scale(tempEndpt2, e.getDirectionVector(), extendRadius);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].add(tempEndpt2, tempEndpt2, tempEndpt);
+        // create a dummy edge
+        let tempEdge = new __WEBPACK_IMPORTED_MODULE_1__Edge__["a" /* default */](tempEndpt, tempEndpt2, -1, false);
+        if (!this.fixForBounds(tempEdge) && !this.fixForWater(tempEdge)) {
+            return;
+        }
+        let danglingEdge = this.adjustForIntersection(tempEdge);
+        //danglingEdge = danglingEdge && this.adjustForEnd(tempEdge);
+        if (!danglingEdge) {
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, tempEndpt2);
+        }
+    }
+    // Search for the Node closest to the new endpoint;
+    // if it falls within a small radius, snap
+    // the edge to that node.
+    adjustForEnd(e) {
+        if (this.getNodeAtPos(e.endpoint2) != undefined) {
+            return true;
+        }
+        let edgeDir = e.getDirectionVector();
+        let endCellCoords = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(this.getPosRowNumber(e.endpoint2), this.getPosColNumber(e.endpoint2));
+        let closestEnd = undefined;
+        let closestEndDistance = Math.max(this.citySize[0], this.citySize[1]);
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                let currCellNum = this.getCellNumberFromRowCol(endCellCoords[0] + j, endCellCoords[1] + i);
+                if (currCellNum == undefined) {
+                    continue;
+                }
+                for (let i = 0; i < this.ncells[currCellNum].length; i++) {
+                    let currNode = this.ncells[currCellNum][i];
+                    if (currNode.distanceFrom(e.endpoint2) < closestEndDistance) {
+                        closestEnd = currNode;
+                        closestEndDistance = currNode.distanceFrom(e.endpoint2);
+                    }
+                }
+            }
+        }
+        let threshold = (this.gridLength + this.gridWidth) / 2;
+        if (e.highway) {
+            threshold = this.hSegLength / 6;
+        }
+        if (closestEnd != undefined) {
+            if (!this.vec2Equality(closestEnd.getPosition(), e.endpoint1)
+                && closestEndDistance < threshold) {
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(e.endpoint2, closestEnd.getPosition());
+                e.setExpandable(false);
+            }
+        }
+        if (e.highway) {
+            return e.getLength() > this.hSegLength / 8;
+        }
+        return e.getLength() > Math.min(this.gridWidth, this.gridLength) / 2;
+    }
     fixForNearbyRoads(e) {
-        /*
-        // Search for the closest Node; if it falls within a small radius, snap
-        // the edge to that node.
-        let endCell : number = this.getPosCellNumber(e.endpoint2);
-    
-        let closest: Node = undefined;
-        let closestDistance: number = 2 * this.length;
-    
-        if(endCell != undefined) {
-          for(let i = 0; i < this.ncells[endCell].length; i++) {
-            if(this.ncells[endCell][i].distanceFrom(e.endpoint2) < closestDistance) {
-              closest = this.ncells[endCell][i];
-            }
-          }
-    
-          if(closest != undefined && closestDistance < this.hSegLengthMin) {
-            vec2.copy(e.endpoint2, closest.getPosition());
-          }
+        let valid = this.adjustForIntersection(e) && this.adjustForEnd(e);
+        if (e.expandable) {
+            this.adjustForLength(e);
         }
-    
-        // Add new intersections where the edge intersects other edges;
-        // keep track of the closest one, and if it is within a reasonable
-        // threshold, snap the end of the edge to that intersection
-    
-        let interCells : Array<number> = this.getEdgeCells(e);
-        for(let i = 0; i < interCells.length; i++) {
-          for(let j = 0; j < this.ecells[i].length; j++) {
-            let inter : vec2 = e.intersectEdge(this.ecells[i][j]);
-            if(inter != undefined && this.getNodeAtPos(inter) == undefined) {
-              let n : Node = new Node(inter, this.nCounter);
-              this.nCounter++;
-            }
-          }
-        }
-    
-        return e.getLength() >= this.hSegLengthMin;*/ return true;
+        return valid;
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = RoadGenerator;
@@ -17338,6 +17629,7 @@ class Edge {
     constructor(end1, end2, i, h) {
         this.endpoint1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
         this.endpoint2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        this.expandable = true;
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint1, end1);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.endpoint2, end2);
         this.id = i;
@@ -17461,6 +17753,9 @@ class Edge {
             || this.intersectSegment(cornertr, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornertr[0], cornerbl[1])) != undefined
             || this.intersectSegment(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(cornertr[0], cornerbl[1]), cornerbl) != undefined;
     }
+    setExpandable(val) {
+        this.expandable = val;
+    }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Edge;
 
@@ -17475,8 +17770,10 @@ class Edge {
 
 class Node {
     constructor(pos, i) {
-        this.x = pos[0];
-        this.y = pos[1];
+        let copy = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(copy, pos);
+        this.x = copy[0];
+        this.y = copy[1];
         this.id = i;
     }
     getPosition() {
@@ -17512,7 +17809,7 @@ class Turtle {
         this.depth = 0;
         this.stepLength = 0;
         this.stepDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].create();
-        this.angleHistory = [];
+        this.rotationTotal = 0;
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.orientation, orient);
         this.depth = dep;
@@ -17524,18 +17821,14 @@ class Turtle {
     }
     rotate(deg) {
         let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].rotate(transform, transform, deg * 0.01745329251);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].rotate(transform, transform, deg * Math.PI / 180);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].transformMat3(this.orientation, this.orientation, transform);
-        this.angleHistory.push(deg);
     }
     setPosition(pos) {
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.position, pos);
     }
     setOrientation(orient) {
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].copy(this.orientation, orient);
-    }
-    clearAngleHistory() {
-        this.angleHistory = [];
     }
 }
 /* harmony default export */ __webpack_exports__["a"] = (Turtle);
@@ -17563,7 +17856,7 @@ module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\n// The vertex
 /* 77 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\nuniform float u_Time;\r\n\r\nuniform float u_ShowElevation;  // True if > 0\r\nuniform float u_ShowPopulation; // True if > 0\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\t// Land vs. Water Graph\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tif(height < u_WaterLevel) {\r\n \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n  \t} else {\r\n  \t\tout_Col = vec4(1.);\r\n  \t}\r\n\t\r\n\t// Show elevation\r\n\tif(u_ShowElevation > 0.) {\r\n\t\tif(height < u_WaterLevel) {\r\n\t \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n\t\t} else if (height < 0.8) {\r\n\t\t\tout_Col = vec4(vec3(132., 58., 84.) / 255., 1.);\r\n\t\t} else if (height < 1.4) {\r\n\t\t\tout_Col = vec4(vec3(181., 130., 141.) / 255., 1.);\r\n\t\t} else if (height < 4.7) {\r\n\t\t\tout_Col = vec4(vec3(239., 225., 230.) / 255., 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(1.);\r\n\t\t}\r\n\t}\r\n\r\n\t// Show population density\r\n\tif(u_ShowPopulation > 0. && height >= u_WaterLevel) {\r\n\t\tfloat population = pow(worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 3.);\r\n\t\tif(population < 0.2) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.1), 1.);\r\n\t\t} else if(population < 0.5) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.4), 1.);\r\n\t\t} else if(population < 0.8) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(130., 232., 67.) / 255., 0.5), 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(22., 158., 62.) / 255., 0.5), 1.);\r\n\t\t}\r\n\t}\r\n\t\r\n}\r\n"
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\nuniform float u_Time;\r\n\r\nuniform float u_ShowElevation;  // True if > 0\r\nuniform float u_ShowPopulation; // True if > 0\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\t// Land vs. Water Graph\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tif(height < u_WaterLevel) {\r\n \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n  \t} else {\r\n  \t\tout_Col = vec4(1.);\r\n  \t}\r\n\t\r\n\t// Show elevation\r\n\tif(u_ShowElevation > 0.) {\r\n\t\tif(height < u_WaterLevel) {\r\n\t \t\tout_Col = vec4(mix(vec3(66., 134., 244.) / 255., vec3(34., 184., 201.) / 255.,\r\n\t \t\t\t\t\t   height + worleyNoise(fs_Pos)), 1.);\r\n\t\t} else if (height < 0.8) {\r\n\t\t\tout_Col = vec4(vec3(132., 58., 84.) / 255., 1.);\r\n\t\t} else if (height < 1.4) {\r\n\t\t\tout_Col = vec4(vec3(181., 130., 141.) / 255., 1.);\r\n\t\t} else if (height < 4.7) {\r\n\t\t\tout_Col = vec4(vec3(239., 225., 230.) / 255., 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(1.);\r\n\t\t}\r\n\t}\r\n\r\n\t// Show population density\r\n\tif(u_ShowPopulation > 0. && height >= u_WaterLevel) {\r\n\t\tfloat population = 1. - worleyNoise(vec2(1.5, -1.0) + 2. * fs_Pos) * fbm2(fs_Pos + vec2(1.3, -2));\r\n\t\tif(population < 0.2) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.1), 1.);\r\n\t\t} else if(population < 0.5) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(235., 242., 99.) / 255., 0.4), 1.);\r\n\t\t} else if(population < 0.8) {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(130., 232., 67.) / 255., 0.5), 1.);\r\n\t\t} else {\r\n\t\t\tout_Col = vec4(mix(out_Col.xyz, vec3(22., 158., 62.) / 255., 0.5), 1.);\r\n\t\t}\r\n\t}\r\n\t\r\n}\r\n"
 
 /***/ }),
 /* 78 */
@@ -17575,7 +17868,7 @@ module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\n// The vertex
 /* 79 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\n\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\tout_Col = vec4(vec3(0.), 1.);\r\n\r\n\t// Map data to the RGB components of each pixel.\r\n\t// Let height correspond with the G value\r\n\t// and population with the R value.\r\n\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tfloat population = pow(1. - worleyNoise(fs_Pos) * fbm2(2. * fs_Pos + vec2(0.3, 7.0)), 3.);\r\n\r\n\tout_Col.g = height / 5.;\r\n  \tout_Col.r = population;\r\n}\r\n"
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform vec3 u_Eye, u_Ref, u_Up;\r\nuniform vec2 u_Dimensions;\r\n\r\nuniform float u_WaterLevel;\r\n\r\nin vec2 fs_Pos;\r\nout vec4 out_Col;\r\n\r\n/* NOISE FUNCTIONS */\r\n\r\nfloat random(vec2 p, vec2 seed) {\r\n  return fract(sin(dot(p + seed, vec2(127.1f, 311.7f))) * 43758.5453f);\r\n}\r\n\r\nfloat interpNoise2D(float x, float y) {\r\n\tint intX = int(floor(x));\r\n\tfloat fractX = fract(x);\r\n\tint intY = int(floor(y));\r\n\tfloat fractY = fract(y);\r\n\r\n\tfloat v1 = random(vec2(intX, intY), vec2(0.));\r\n\tfloat v2 = random(vec2(intX + 1, intY), vec2(0.));\r\n\tfloat v3 = random(vec2(intX, intY + 1), vec2(0.));\r\n\tfloat v4 = random(vec2(intX + 1, intY + 1), vec2(0.));\r\n\r\n\t/*float i1 = smoothstep(v1, v2, v1 + (v2 - v1) * fractX);\r\n\tif(v1 > v2) {\r\n\t\ti1 = smoothstep(v2, v1, v2 + (v1 - v2) * fractX);\r\n\t}*/\r\n\tfloat i1 = mix(v1, v2, fractX);\r\n\tfloat i2 = mix(v3, v4, fractX);\r\n\treturn mix(i1, i2, fractY);\r\n}\r\n\r\nfloat fbm2(vec2 p) {\r\n\tfloat total = 0.0f;\r\n\tfloat persistence = 0.5f;\r\n\tint octaves = 8;\r\n\r\n\tfloat freq = .5;\r\n\tfloat amp = 1. / persistence;\r\n\r\n\tfor(int i = 0; i < octaves; i++) {\r\n\t\tfreq *= 2.0;\r\n\t\tamp *= persistence;\r\n\t\ttotal += interpNoise2D(p.x * freq, p.y * freq) * amp;\r\n\t}\r\n\r\n\treturn total;\r\n}\r\n\r\n#define cell_size 2.f\r\n\r\nvec2 generate_point(vec2 cell) {\r\n    vec2 p = vec2(cell.x, cell.y);\r\n    p += fract(sin(vec2(dot(p, vec2(127.1f, 311.7f)), dot(p, vec2(269.5f, 183.3f)) * 43758.5453f)));\r\n    return p * cell_size;\r\n}\r\n\r\nfloat worleyNoise(vec2 pixel) {\r\n    vec2 cell = floor(pixel / cell_size);\r\n\r\n    vec2 point = generate_point(cell);\r\n\r\n    float shortest_distance = length(pixel - point);\r\n\r\n   // compute shortest distance from cell + neighboring cell points\r\n\r\n    for(float i = -1.0f; i <= 1.0f; i += 1.0f) {\r\n        float ncell_x = cell.x + i;\r\n        for(float j = -1.0f; j <= 1.0f; j += 1.0f) {\r\n            float ncell_y = cell.y + j;\r\n\r\n            // get the point for that cell\r\n            vec2 npoint = generate_point(vec2(ncell_x, ncell_y));\r\n\r\n            // compare to previous distances\r\n            float distance = length(pixel - npoint);\r\n            if(distance < shortest_distance) {\r\n                shortest_distance = distance;\r\n            }\r\n        }\r\n    }\r\n\r\n    return shortest_distance / cell_size;\r\n}\r\n\r\nvoid main() {\r\n\t\r\n\tout_Col = vec4(vec3(0.), 1.);\r\n\r\n\t// Map data to the RGB components of each pixel.\r\n\t// Let height correspond with the G value\r\n\t// and population with the R value.\r\n\r\n\tfloat height = pow(fbm2(2.f * fs_Pos + vec2(1.f, -0.4f)), 5.f);\r\n\tfloat population = 1. - worleyNoise(vec2(1.5, -1.0) + 2. * fs_Pos) * fbm2(fs_Pos + vec2(1.3, -2));\r\n\r\n\tout_Col.g = height / 5.;\r\n  \tout_Col.r = population;\r\n}\r\n"
 
 /***/ })
 /******/ ]);
